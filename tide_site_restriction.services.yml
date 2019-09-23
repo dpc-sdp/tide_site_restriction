@@ -1,0 +1,6 @@
+services:
+  tide_site_restriction.helper:
+    class: \Drupal\tide_site_restriction\Helper
+    arguments: ['@entity_type.manager', '@entity.repository', '@current_user']
+    calls:
+      - [setContainer, ['@service_container']]

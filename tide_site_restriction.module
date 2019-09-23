@@ -1,0 +1,97 @@
+<?php
+
+/**
+ * @file
+ * Module file.
+ */
+
+use Drupal\Core\Access\AccessResult;
+use Drupal\Core\Cache\Cache;
+use Drupal\Core\Field\FieldDefinitionInterface;
+use Drupal\Core\Field\FieldItemListInterface;
+use Drupal\Core\Session\AccountInterface;
+use Drupal\node\NodeInterface;
+use Drupal\user\Entity\User;
+use Drupal\user\UserInterface;
+use Drupal\views\Plugin\views\cache\CachePluginBase;
+use Drupal\views\ViewExecutable;
+
+/**
+ * Implements hook_entity_field_access().
+ */
+function tide_site_restriction_entity_field_access($operation, FieldDefinitionInterface $field_definition, AccountInterface $account, FieldItemListInterface $items = NULL) {
+  if ($field_definition->getName() == 'field_user_site') {
+    return $account->hasPermission('administer site restriction') ? AccessResult::allowed() : AccessResult::forbidden();
+  }
+
+  return AccessResult::neutral();
+}
+
+/**
+ * Implements hook_node_access().
+ */
+function tide_site_restriction_node_access(NodeInterface $node, $op, AccountInterface $account) {
+  if ($account->isAuthenticated() && in_array($op, ['update', 'delete'])) {
+    /** @var \Drupal\tide_site\TideSiteHelper $site_helper */
+    $site_helper = \Drupal::service('tide_site.helper');
+    $node_sites = $site_helper->getEntitySites($node);
+
+    /** @var \Drupal\tide_site_restriction\Helper $site_restriction_helper */
+    $site_restriction_helper = \Drupal::service('tide_site_restriction.helper');
+    $user = User::load($account->id());
+    $user_sites = $site_restriction_helper->getUserSites($user);
+    $user_has_sites = !empty($user_sites);
+    $user_can_bypass_restriction = $account->hasPermission('bypass site restriction');
+    if (!$user_can_bypass_restriction && $user_has_sites) {
+      foreach ($user_sites as $site_id) {
+        if (isset($node_sites['ids'][$site_id]) || in_array($site_id, $node_sites['sections'])) {
+          return AccessResult::allowed()
+            ->addCacheableDependency($node)
+            ->addCacheTags(['site_restriction'])
+            ->cachePerUser();
+        }
+      }
+      return AccessResult::forbidden('Access denied by Site Restriction.')
+        ->addCacheableDependency($node)
+        ->addCacheTags(['site_restriction'])
+        ->cachePerUser();
+    }
+  }
+
+  return AccessResult::neutral()->addCacheableDependency($node);
+}
+
+/**
+ * Implements hook_views_post_render().
+ */
+function tide_site_restriction_views_post_render(ViewExecutable $view, &$output, CachePluginBase $cache) {
+  if ($view->getBaseEntityType()->id() == 'node') {
+    $output['#cache']['tags'][] = 'site_restriction';
+    if (\Drupal::currentUser()->isAuthenticated()) {
+      $output['#cache']['tags'][] = 'user:' . \Drupal::currentUser()->id();
+    }
+  }
+}
+
+/**
+ * Implements hook_views_pre_render().
+ */
+function tide_site_restriction_views_pre_render(ViewExecutable $view) {
+  if ($view->getBaseEntityType()->id() == 'node') {
+    foreach ($view->result as $row) {
+      if ($row->_entity) {
+        $row->_entity->addCacheTags(['site_restriction']);
+        if (\Drupal::currentUser()->isAuthenticated()) {
+          $row->_entity->addCacheTags(['user:' . \Drupal::currentUser()->id()]);
+        }
+      }
+    }
+  }
+}
+
+/**
+ * Implements hook_ENTITY_TYPE_presave().
+ */
+function tide_site_restriction_user_presave(UserInterface $user) {
+  Cache::invalidateTags(['site_restriction']);
+}

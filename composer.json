@@ -1,0 +1,19 @@
+{
+    "name": "dpc-sdp/tide_site_restriction",
+    "description": "User restriction by Sites for Tide Drupal 8 distribution",
+    "type": "drupal-module",
+    "license": "GPL-2.0+",
+    "version": "0.0.1",
+    "require": {
+        "dpc-sdp/tide_core": "@dev",
+        "dpc-sdp/tide_site": "@dev"
+    },
+    "repositories": {
+        "drupal": {
+            "type": "composer",
+            "url": "https://packages.drupal.org/8"
+        }
+    },
+    "minimum-stability": "alpha",
+    "prefer-stable": true
+}

@@ -1,0 +1,13 @@
+name: Tide Site Restriction
+type: module
+description: 'Provides user restriction by Sites.'
+package: Tide
+core: 8.x
+dependencies:
+  - dpc-sdp:tide_core
+  - dpc-sdp:tide_site
+config_devel:
+  install:
+    - field.field.user.user.field_user_site
+    - field.storage.user.field_user_site
+  optional: { }

@@ -1,0 +1,35 @@
+<?php
+
+/**
+ * @file
+ * Install file.
+ */
+
+use Drupal\user\Entity\Role;
+
+/**
+ * Implements hook_install().
+ */
+function tide_site_restriction_install() {
+  /** @var \Drupal\Core\Entity\Display\EntityFormDisplayInterface $entity_form_display */
+  $entity_form_display = \Drupal::entityTypeManager()
+    ->getStorage('entity_form_display')
+    ->load('user.user.default');
+  if ($entity_form_display) {
+    $entity_form_display->setComponent('field_user_site', [
+      'weight' => 31,
+      'settings' => [],
+      'third_party_settings' => [],
+      'type' => 'options_buttons',
+      'region' => 'content',
+    ])->save();
+  }
+
+  // Grants new permissions to Site Admins.
+  $role = Role::load('site_admin');
+  if ($role) {
+    $role->grantPermission('administer site restriction');
+    $role->grantPermission('bypass site restriction');
+    $role->save();
+  }
+}
