@@ -4,9 +4,10 @@ namespace Drupal\tide_site_restriction;
 
 use Drupal\Core\Entity\EntityRepositoryInterface;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
+use Drupal\Core\Session\AccountInterface;
 use Drupal\Core\Session\AccountProxyInterface;
 use Drupal\tide_site\TideSiteHelper;
-use Drupal\user\Entity\User;
+use Drupal\user\UserInterface;
 
 /**
  * Class Helper.
@@ -41,7 +42,7 @@ class Helper extends TideSiteHelper {
   /**
    * Returns the Sites of a user account.
    *
-   * @param \Drupal\user\Entity\User $user
+   * @param \Drupal\user\UserInterface $user
    *   The User entity object.
    * @param bool $reset
    *   Whether to reset cache.
@@ -49,7 +50,7 @@ class Helper extends TideSiteHelper {
    * @return array
    *   The sites.
    */
-  public function getUserSites(User $user, $reset = FALSE) {
+  public function getUserSites(UserInterface $user, $reset = FALSE) {
     $sites = [];
     $field_name = 'field_user_site';
 
@@ -65,6 +66,25 @@ class Helper extends TideSiteHelper {
     }
 
     return $sites;
+  }
+
+  /**
+   * Check if a user account can bypass the site restriction.
+   *
+   * @param \Drupal\Core\Session\AccountInterface|null $account
+   *   The user account, default to current user.
+   *
+   * @return bool
+   *   Whether the account can bypass site restriction.
+   */
+  public function canBypassRestriction(AccountInterface $account = NULL) {
+    if (!$account) {
+      $account = $this->currentUser;
+    }
+
+    return $account->hasPermission('bypass node access')
+      || $account->hasPermission('administer nodes')
+      || $account->hasPermission('bypass site restriction');
   }
 
 }

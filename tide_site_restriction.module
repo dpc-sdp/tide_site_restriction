@@ -9,6 +9,7 @@ use Drupal\Core\Access\AccessResult;
 use Drupal\Core\Cache\Cache;
 use Drupal\Core\Field\FieldDefinitionInterface;
 use Drupal\Core\Field\FieldItemListInterface;
+use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Session\AccountInterface;
 use Drupal\node\NodeInterface;
 use Drupal\user\Entity\User;
@@ -38,11 +39,11 @@ function tide_site_restriction_node_access(NodeInterface $node, $op, AccountInte
 
     /** @var \Drupal\tide_site_restriction\Helper $site_restriction_helper */
     $site_restriction_helper = \Drupal::service('tide_site_restriction.helper');
+    /** @var \Drupal\user\Entity\User $user */
     $user = User::load($account->id());
     $user_sites = $site_restriction_helper->getUserSites($user);
-    $user_has_sites = !empty($user_sites);
-    $user_can_bypass_restriction = $account->hasPermission('bypass site restriction');
-    if (!$user_can_bypass_restriction && $user_has_sites) {
+    $user_can_bypass_restriction = $site_restriction_helper->canBypassRestriction($account);
+    if (!$user_can_bypass_restriction) {
       foreach ($user_sites as $site_id) {
         if (isset($node_sites['ids'][$site_id]) || in_array($site_id, $node_sites['sections'])) {
           return AccessResult::allowed()
@@ -94,4 +95,57 @@ function tide_site_restriction_views_pre_render(ViewExecutable $view) {
  */
 function tide_site_restriction_user_presave(UserInterface $user) {
   Cache::invalidateTags(['site_restriction']);
+}
+
+/**
+ * Implements hook_views_pre_view().
+ */
+function tide_site_restriction_views_pre_view(ViewExecutable $view, $display_id, array &$args) {
+  // Pre-select user sites in Summary Content admin view.
+  if ($view->id() == 'summary_contents_filters') {
+    if ($display_id == 'page_1') {
+      /** @var \Drupal\tide_site_restriction\Helper $site_restriction_helper */
+      $site_restriction_helper = \Drupal::service('tide_site_restriction.helper');
+      $account = \Drupal::currentUser();
+      $user_can_bypass_restriction = $site_restriction_helper->canBypassRestriction($account);;
+
+      $filters = $view->display_handler->getOption('filters');
+      if (!empty($filters['field_node_site_target_id'])) {
+        // Change the filter to accept multiple values.
+        $filters['field_node_site_target_id']['expose']['multiple'] = TRUE;
+        $view->display_handler->setOption('filters', $filters);
+
+        // Pre-select the user sites if the filter is empty.
+        if (!$user_can_bypass_restriction) {
+          /** @var \Drupal\user\Entity\User $user */
+          $user = User::load($account->id());
+          $user_sites = $site_restriction_helper->getUserSites($user);
+          $exposed_input = $view->getExposedInput();
+          if (!empty($user_sites) && empty($exposed_input)) {
+            $exposed_input['field_node_site_target_id'] = $user_sites;
+            $view->setExposedInput($exposed_input);
+          }
+        }
+      }
+    }
+  }
+}
+
+/**
+ * Implements hook_form_FORM_ID_alter().
+ */
+function tide_site_restriction_form_views_exposed_form_alter(&$form, FormStateInterface $form_state, $form_id) {
+  // Enable Select2 to Site filter of Content Admin view.
+  if (!empty($form['#id']) && $form['#id'] == 'views-exposed-form-summary-contents-filters-page-1') {
+    if (!empty($form['field_node_site_target_id']['#multiple'])) {
+      $form['field_node_site_target_id']['#type'] = 'select2';
+      $form['field_node_site_target_id']['#select2'] = [
+        'allowClear' => TRUE,
+        'dropdownAutoWidth' => FALSE,
+        'width' => 'resolve',
+        'closeOnSelect' => FALSE,
+        'placeholder' => t('- Any -'),
+      ];
+    }
+  }
 }

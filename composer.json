@@ -6,7 +6,10 @@
     "version": "0.0.1",
     "require": {
         "dpc-sdp/tide_core": "@dev",
-        "dpc-sdp/tide_site": "@dev"
+        "dpc-sdp/tide_site": "@dev",
+        "drupal/select2": "^1.4",
+        "oomphinc/composer-installers-extender": "^1.1",
+        "npm-asset/select2": "^4.0"
     },
     "repositories": {
         "drupal": {
@@ -15,5 +18,15 @@
         }
     },
     "minimum-stability": "alpha",
-    "prefer-stable": true
+    "prefer-stable": true,
+    "extra": {
+        "installer-paths": {
+            "docroot/libraries/{$name}": [
+                "type:drupal-library",
+                "type:bower-asset",
+                "type:npm-asset"
+            ]
+        },
+        "installer-types": ["bower-asset", "npm-asset"]
+    }
 }
