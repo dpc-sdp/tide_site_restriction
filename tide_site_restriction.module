@@ -149,3 +149,19 @@ function tide_site_restriction_form_views_exposed_form_alter(&$form, FormStateIn
     }
   }
 }
+
+/**
+ * Implements hook_field_widget_form_alter().
+ */
+function tide_site_restriction_field_widget_form_alter(&$element, FormStateInterface $form_state, $context) {
+  if ($context['items']->getName() == 'field_node_primary_site' || $context['items']->getName() == 'field_node_site') {
+    $target = array_keys($element['#options']);
+    $disabled = ['disabled' => TRUE];
+    /** @var \Drupal\tide_site_restriction\Helper $helper */
+    $helper = \Drupal::service('tide_site_restriction.helper');
+    $available_sites = $helper->getUserSites(User::load(\Drupal::service('current_user')->id()));
+    $not_available_sites = array_flip(array_diff($target, $available_sites));
+    $disabled_options = array_fill_keys(array_keys($not_available_sites), $disabled);
+    $element['#options_attributes'] = $disabled_options;
+  }
+}
