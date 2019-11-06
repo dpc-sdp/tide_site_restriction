@@ -154,14 +154,60 @@ function tide_site_restriction_form_views_exposed_form_alter(&$form, FormStateIn
  * Implements hook_field_widget_form_alter().
  */
 function tide_site_restriction_field_widget_form_alter(&$element, FormStateInterface $form_state, $context) {
-  if ($context['items']->getName() == 'field_node_primary_site' || $context['items']->getName() == 'field_node_site') {
-    $target = array_keys($element['#options']);
+  /** @var \Drupal\tide_site_restriction\Helper $helper */
+  $helper = \Drupal::service('tide_site_restriction.helper');
+  // Node form logic.
+  if (($context['items']->getName() == 'field_node_primary_site' || $context['items']->getName() == 'field_node_site') && !$helper->canBypassRestriction()) {
+    $default_sites = array_keys($element['#options']);
     $disabled = ['disabled' => TRUE];
-    /** @var \Drupal\tide_site_restriction\Helper $helper */
-    $helper = \Drupal::service('tide_site_restriction.helper');
-    $available_sites = $helper->getUserSites(User::load(\Drupal::service('current_user')->id()));
-    $not_available_sites = array_flip(array_diff($target, $available_sites));
+    $current_user = \Drupal::service('current_user');
+    $available_sites = $helper->getUserSites(User::load($current_user->id()));
+    $not_available_sites = array_flip(array_diff($default_sites, $available_sites));
     $disabled_options = array_fill_keys(array_keys($not_available_sites), $disabled);
+    // Pre-populates to field_node_site field.
+    if (($context['items']->getName() == 'field_node_site')) {
+      $element['#default_value'] = $available_sites;
+    }
+    else {
+      // Pre-populates to field_node_primary_site field.
+      $element['#default_value'] = reset(array_intersect(array_keys($element['#options']), $available_sites));
+    }
     $element['#options_attributes'] = $disabled_options;
+  }
+
+  // User form logic.
+  if ($context['items']->getName() == 'field_user_site') {
+    // Prepare custom attr data for JS.
+    $tree = \Drupal::entityTypeManager()
+      ->getStorage('taxonomy_term')
+      ->loadTree('sites', 0, 1);
+    if (isset($element['#options'])) {
+      $parent_sites = array_intersect_key($element['#options'], array_flip(array_column($tree, 'tid')));
+    }
+    else {
+      $parent_sites = array_flip(array_column($tree, 'tid'));
+    }
+    $options = [];
+    foreach ($parent_sites as $site_id => $item) {
+      $options[$site_id] = ['data-check' => $site_id];
+      $children = \Drupal::entityTypeManager()
+        ->getStorage('taxonomy_term')
+        ->loadChildren($site_id);
+      if (!empty($children)) {
+        foreach ($children as $child_site_id => $child) {
+          $options[$child_site_id] = ['data-parent' => $site_id];
+        }
+      }
+    }
+    // Needs to know the target user.
+    $user_roles = [];
+    $user = \Drupal::routeMatch()->getParameter('user');
+    if ($user && $user instanceof UserInterface) {
+      $user_roles = $user->getRoles();
+    }
+    $element['#options_attributes'] = $options;
+    // Passes the data and injects the JS file.
+    $element['#attached']['drupalSettings']['tide_site_restriction_roles'] = $user_roles;
+    $element['#attached']['library'][] = 'tide_site_restriction/tide_site_restriction_user_form';
   }
 }
