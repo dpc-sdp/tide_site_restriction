@@ -1,9 +1,9 @@
-@dpc-sdp
+@jsonapi
 Feature: site selector widget
 
   Ensure that site selector widget meets the expected requirements.
 
-  @api @jsonapi
+  @api @suggest
   Scenario: site selector widget's limitation for editors.
     Given sites terms:
       | name                 | parent          | tid   | uuid                                  |
@@ -23,12 +23,12 @@ Feature: site selector widget
       | name        | status | uid    | mail                    | pass         | field_user_site | roles  |
       | test.editor |      1 | 999999 | test.editor@example.com | L9dx9IJz3'M* | Test Section 11 | Editor |
 
-    And landing_page content:
+    And test content:
       | title       | path       | moderation_state | uuid                                | field_node_site              | field_node_primary_site | nid     | field_topic  |
       | [TEST] LP 1 | /test-lp-1 | published        | 99999999-aaaa-bbbb-ccc-000000000000 | Test Site 1, Test Section 11 | Test Site 1             | 999999  | Test topic 1 |
 
     When I am logged in as "test.editor"
-    And I go to "node/add/landing_page"
+    And I go to "node/add/test"
     Then I should see an "input#edit-field-node-site-10010" element
     And I should see an "input#edit-field-node-site-10011" element
     And I should not see an "input#edit-field-node-site-10012" element
@@ -43,24 +43,25 @@ Feature: site selector widget
     And save screenshot
 
     When I am an anonymous user
-    Then I go to "/api/v1/node/landing_page?site=10010"
+    Then I send a GET request to "api/v1/node/test?site=10010"
     Then I should get a 200 HTTP response
-    When I send a GET request to "api/v1/node/landing_page/99999999-aaaa-bbbb-ccc-000000000000?site=10010"
+    When I send a GET request to "api/v1/node/test/99999999-aaaa-bbbb-ccc-000000000000?site=10010"
     Then I should get a 200 HTTP response
+    And save screenshot
     And the response should be in JSON
     And the JSON node "links.self" should exist
-    And the JSON node "links.self.href" should contain "api/v1/node/landing_page"
+    And the JSON node "links.self.href" should contain "api/v1/node/test"
     And the JSON node "data" should exist
     
     When I send a GET request to "/api/v1/route?&site=10010&path=/site-10010/test-lp-1"
-    Then the JSON node "data.attributes.bundle" should be equal to "landing_page"
+    Then the JSON node "data.attributes.bundle" should be equal to "test"
     And the JSON node "data.attributes.uuid" should be equal to "99999999-aaaa-bbbb-ccc-000000000000"
     And the JSON node "data.attributes.section" should be equal to "10011"
     And the JSON node "data.attributes.entity_id" should be equal to "999999"
-    And the JSON node "data.attributes.endpoint" should contain "api/v1/node/landing_page/99999999-aaaa-bbbb-ccc-000000000000"
+    And the JSON node "data.attributes.endpoint" should contain "api/v1/node/test/99999999-aaaa-bbbb-ccc-000000000000"
     And the JSON node "links.self.href" should contain "api/v1/route?site=10010&path=/site-10010/test-lp-1"
 
-    When I send a GET request to "/api/v1/node/landing_page?site=10010&sort=-created"
+    When I send a GET request to "/api/v1/node/test?site=10010&sort=-created"
     Then the JSON node "data[0].id" should be equal to "99999999-aaaa-bbbb-ccc-000000000000"
     Then the JSON node "data[0].attributes.moderation_state" should be equal to "published"
     And the JSON node "data[0].attributes.title" should be equal to "[TEST] LP 1"
@@ -68,17 +69,17 @@ Feature: site selector widget
     And the JSON node "data[0].attributes.drupal_internal__nid" should be equal to "999999"
     And the JSON node "data[0].attributes.metatag_normalized" should exist
     And the JSON node "data[0].attributes.metatag_normalized[0].attributes.name" should be equal to "title"
-    And the JSON node "data[0].attributes.metatag_normalized[0].attributes.content" should be equal to "[TEST] LP 1"
+    And the JSON node "data[0].attributes.metatag_normalized[0].attributes.content" should be equal to "[TEST] LP 1 | Single Digital Presence Content Management System"
     And the JSON node "data[0].attributes.metatag_normalized[1].attributes.href" should contain "/test-lp-1"
     And the JSON node "data[0].attributes.path" should exist
     And the JSON node "data[0].attributes.path.alias" should be equal to "/test-lp-1"
     And the JSON node "data[0].attributes.path.url" should be equal to "/test-lp-1"
     And the JSON node "data[0].attributes.path.origin_alias" should be equal to "/site-10010/test-lp-1"
     And the JSON node "data[0].attributes.path.origin_url" should be equal to "/test-lp-1"
-    When I send a GET request to "api/v1/node/landing_page?site=10010"
+    When I send a GET request to "api/v1/node/test?site=10010"
     And the JSON node "meta.count" should be equal to "1"
 
-  @api @jsonapi
+  @api @suggest
   Scenario: editors can access nodes that site-admin user created.
     Given sites terms:
       | name                 | parent          | tid   | uuid                                  |
@@ -100,7 +101,7 @@ Feature: site selector widget
       | name        | status | uid    | mail                    | pass         | field_user_site | roles  |
       | test.editor |      1 | 999999 | test.editor@example.com | L9dx9IJz3'M* | Test Section 11 | Editor |
 
-    And landing_page content:
+    And test content:
       | title       | path       | moderation_state | uuid                                | field_node_site                                             | field_node_primary_site | nid     | field_topic  |
       | [TEST] LP 1 | /test-lp-1 | published        | 99999999-aaaa-bbbb-ccc-000000000001 | Test Site 1, Test Section 11                                | Test Site 1             | 999999  | Test topic 1 |
       | [TEST] LP 2 | /test-lp-2 | published        | 99999999-aaaa-bbbb-ccc-000000000002 | Test Site 1, Test Section 11, Test Section 12               | Test Site 1             | 999998  | Test topic 2 |
@@ -126,24 +127,25 @@ Feature: site selector widget
     Then I should get a 404 HTTP response
 
     When I am an anonymous user
-    Then I go to "/api/v1/node/landing_page?site=10010"
+    Then I send a GET request to "api/v1/node/test?site=10010"
     Then I should get a 200 HTTP response
-    When I send a GET request to "api/v1/node/landing_page/99999999-aaaa-bbbb-ccc-000000000001?site=10010"
+    When I send a GET request to "api/v1/node/test/99999999-aaaa-bbbb-ccc-000000000001?site=10010"
     Then I should get a 200 HTTP response
+    And save screenshot
     And the response should be in JSON
     And the JSON node "links.self" should exist
-    And the JSON node "links.self.href" should contain "api/v1/node/landing_page"
+    And the JSON node "links.self.href" should contain "api/v1/node/test"
     And the JSON node "data" should exist
 
     When I send a GET request to "/api/v1/route?&site=10010&path=/site-10010/test-lp-1"
-    Then the JSON node "data.attributes.bundle" should be equal to "landing_page"
+    Then the JSON node "data.attributes.bundle" should be equal to "test"
     And the JSON node "data.attributes.uuid" should be equal to "99999999-aaaa-bbbb-ccc-000000000001"
     And the JSON node "data.attributes.section" should be equal to "10011"
     And the JSON node "data.attributes.entity_id" should be equal to "999999"
-    And the JSON node "data.attributes.endpoint" should contain "api/v1/node/landing_page/99999999-aaaa-bbbb-ccc-000000000001"
+    And the JSON node "data.attributes.endpoint" should contain "api/v1/node/test/99999999-aaaa-bbbb-ccc-000000000001"
     And the JSON node "links.self.href" should contain "api/v1/route?site=10010&path=/site-10010/test-lp-1"
 
-    When I send a GET request to "/api/v1/node/landing_page?site=10010&sort=-created"
+    When I send a GET request to "/api/v1/node/test?site=10010&sort=-created"
     Then the JSON node "data[0].id" should be equal to "99999999-aaaa-bbbb-ccc-000000000002"
     Then the JSON node "data[0].attributes.moderation_state" should be equal to "published"
     And the JSON node "data[0].attributes.title" should be equal to "[TEST] LP 2"
@@ -151,12 +153,12 @@ Feature: site selector widget
     And the JSON node "data[0].attributes.drupal_internal__nid" should be equal to "999998"
     And the JSON node "data[0].attributes.metatag_normalized" should exist
     And the JSON node "data[0].attributes.metatag_normalized[0].attributes.name" should be equal to "title"
-    And the JSON node "data[0].attributes.metatag_normalized[0].attributes.content" should be equal to "[TEST] LP 2"
+    And the JSON node "data[0].attributes.metatag_normalized[0].attributes.content" should be equal to "[TEST] LP 2 | Single Digital Presence Content Management System"
     And the JSON node "data[0].attributes.metatag_normalized[1].attributes.href" should contain "/test-lp-2"
     And the JSON node "data[0].attributes.path" should exist
     And the JSON node "data[0].attributes.path.alias" should be equal to "/test-lp-2"
     And the JSON node "data[0].attributes.path.url" should be equal to "/test-lp-2"
     And the JSON node "data[0].attributes.path.origin_alias" should be equal to "/site-10010/test-lp-2"
     And the JSON node "data[0].attributes.path.origin_url" should be equal to "/test-lp-2"
-    When I send a GET request to "api/v1/node/landing_page?site=10010"
+    When I send a GET request to "api/v1/node/test?site=10010"
     And the JSON node "meta.count" should be equal to "2"
