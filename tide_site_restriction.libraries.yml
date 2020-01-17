@@ -1,0 +1,13 @@
+tide_site_restriction_node_form:
+  version: 1.0
+  js:
+    js/tide_site_restriction_node_form.js: {}
+  dependencies:
+    - core/jquery
+
+tide_site_restriction_user_form:
+  version: 1.0
+  js:
+    js/tide_site_restriction_user_form.js: {}
+  dependencies:
+    - core/jquery

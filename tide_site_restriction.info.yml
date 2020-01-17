@@ -7,6 +7,7 @@ dependencies:
   - dpc-sdp:tide_core
   - dpc-sdp:tide_site
   - drupal:select2
+  - drupal:form_options_attributes
 config_devel:
   install:
     - field.field.user.user.field_user_site
