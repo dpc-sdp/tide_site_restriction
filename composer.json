@@ -1,0 +1,32 @@
+{
+    "name": "dpc-sdp/tide_site_restriction",
+    "description": "User restriction by Sites for Tide Drupal 8 distribution",
+    "type": "drupal-module",
+    "license": "GPL-2.0+",
+    "version": "0.0.1",
+    "require": {
+        "dpc-sdp/tide_core": "@dev",
+        "dpc-sdp/tide_site": "@dev",
+        "drupal/select2": "^1.4",
+        "oomphinc/composer-installers-extender": "^1.1",
+        "npm-asset/select2": "^4.0"
+    },
+    "repositories": {
+        "drupal": {
+            "type": "composer",
+            "url": "https://packages.drupal.org/8"
+        }
+    },
+    "minimum-stability": "alpha",
+    "prefer-stable": true,
+    "extra": {
+        "installer-paths": {
+            "docroot/libraries/{$name}": [
+                "type:drupal-library",
+                "type:bower-asset",
+                "type:npm-asset"
+            ]
+        },
+        "installer-types": ["bower-asset", "npm-asset"]
+    }
+}

@@ -1,0 +1,8 @@
+administer site restriction:
+  title: 'Administer site restriction'
+  description: 'Administer user restriction by Sites.'
+  restrict access: TRUE
+bypass site restriction:
+  title: 'Bypass site restriction'
+  description: 'Bypass user restriction by Sites.'
+  restrict access: TRUE
