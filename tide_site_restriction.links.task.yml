@@ -1,0 +1,4 @@
+tide_site_restriction.user_tab:
+  route_name: tide_site_restriction.sites_allocation_tab
+  base_route: entity.user.canonical
+  title: 'Sites allocation'
