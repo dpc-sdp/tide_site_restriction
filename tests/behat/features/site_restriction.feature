@@ -29,18 +29,16 @@ Feature: site selector widget
 
     When I am logged in as "test.editor"
     And I go to "node/add/test"
+    Then save screenshot
     Then I should see an "input#edit-field-node-site-10010" element
     And I should see an "input#edit-field-node-site-10011" element
     And I should not see an "input#edit-field-node-site-10012" element
     And I should not see an "input#edit-field-node-site-10013" element
-    And I should not see an "input#edit-field-node-site-10014" element
-    And I should not see an "input#edit-field-node-site-10015" element
-    And I should not see an "input#edit-field-node-site-10016" element
+    And I should see an "input#edit-field-node-site-10014" element
     And I fill in "Title" with "Bibendum Pharetra Inceptos"
     And I fill in "Summary" with "Cras Tristique Risus"
     And I fill in "Topic" with "Test topic 1 (10017)"
     And I select "Needs Review" from "Save as"
-    And save screenshot
 
     When I am an anonymous user
     Then I send a GET request to "api/v1/node/test?site=10010"
@@ -109,18 +107,16 @@ Feature: site selector widget
     When I am logged in as "test.editor"
     Then I go to "/node/999999/edit"
     Then I should get a 200 HTTP response
+    Then save screenshot
     Then I should see an "input#edit-field-node-site-10010" element
     And I should see an "input#edit-field-node-site-10011" element
     And I should not see an "input#edit-field-node-site-10012" element
     And I should not see an "input#edit-field-node-site-10013" element
-    And I should not see an "input#edit-field-node-site-10014" element
-    And I should not see an "input#edit-field-node-site-10015" element
-    And I should not see an "input#edit-field-node-site-10016" element
+    And I should see an "input#edit-field-node-site-10014" element
     And I fill in "Title" with "Bibendum Pharetra Inceptos"
     And I fill in "Summary" with "Cras Tristique Risus"
     And I fill in "Topic" with "Test topic 1 (10017)"
     And I select "Draft" from "Change to"
-    And save screenshot
     When I go to "/node/999998/edit"
     Then I should get a 404 HTTP response
     When I go to "/node/999997/edit"
