@@ -9,6 +9,7 @@ use Drupal\Core\Field\Plugin\Field\FieldWidget\OptionsButtonsWidget;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
 use Drupal\Core\Session\AccountProxyInterface;
+use Drupal\node\NodeInterface;
 use Drupal\tide_site\TideSiteHelper;
 use Drupal\tide_site_restriction\Helper;
 use Drupal\user\Entity\User;
@@ -92,6 +93,7 @@ class TideSiteRestrictionFieldWidget extends OptionsButtonsWidget implements Con
       $element['#default_value'] = $element['#default_value'] ? $element['#default_value'] : key($element['#options']);
     }
     $element['#default_value'] = empty($element['#default_value']) ? array_keys($element['#options']) : $element['#default_value'];
+    $element['#attached']['library'][] = 'tide_site_restriction/tide_site_restriction_node_form';
     return $element;
   }
 
@@ -100,10 +102,19 @@ class TideSiteRestrictionFieldWidget extends OptionsButtonsWidget implements Con
    */
   protected function getOptions(FieldableEntityInterface $entity) {
     $options = parent::getOptions($entity);
+    $selected = [];
+    if ($entity instanceof NodeInterface) {
+      $field_name = $this->fieldDefinition->getName();
+      if ($entity->hasField($field_name) && !$entity->get($field_name)->isEmpty()) {
+        $values = $entity->get($field_name)->getValue();
+        $selected = array_column($values, 'target_id');
+      }
+    }
     if ($this->helper->canBypassRestriction($this->currentUser)) {
       return $options;
     }
-    return $this->userOptionsFilter($this->currentUser, $options);
+
+    return $this->userOptionsFilter($this->currentUser, $options, $selected);
   }
 
   /**
@@ -113,11 +124,13 @@ class TideSiteRestrictionFieldWidget extends OptionsButtonsWidget implements Con
    *   The user.
    * @param array $options
    *   The default options.
+   * @param array $selected
+   *   The selected options.
    *
    * @return array
    *   The options.
    */
-  protected function userOptionsFilter(AccountProxyInterface $account, array $options) {
+  protected function userOptionsFilter(AccountProxyInterface $account, array $options, array $selected) {
     $userSites = $this->helper->getUserSites(User::load($account->id()));
     $result = [];
     foreach ($userSites as $site) {
@@ -125,7 +138,7 @@ class TideSiteRestrictionFieldWidget extends OptionsButtonsWidget implements Con
       $parent_id = reset($trail);
       $result[] = $parent_id;
     }
-    $allSites = array_merge(array_unique($result), $userSites);
+    $allSites = array_merge(array_unique($result), $userSites, $selected);
     $options = array_intersect_key($options, array_flip($allSites));
     return $options;
   }
@@ -145,6 +158,13 @@ class TideSiteRestrictionFieldWidget extends OptionsButtonsWidget implements Con
       $options[$parentSiteId] = ['target_id' => $parentSiteId];
     }
     return array_map('unserialize', array_unique(array_map('serialize', array_merge($results, $options))));
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public static function isApplicable(FieldDefinitionInterface $field_definition) {
+    return (($field_definition->getName() == 'field_node_primary_site' || $field_definition->getName() == 'field_node_site') && $field_definition->getTargetEntityTypeId() == 'node');
   }
 
 }
