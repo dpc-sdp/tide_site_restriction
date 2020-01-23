@@ -33,10 +33,6 @@ function tide_site_restriction_entity_field_access($operation, FieldDefinitionIn
  */
 function tide_site_restriction_node_access(NodeInterface $node, $op, AccountInterface $account) {
   if ($account->isAuthenticated() && in_array($op, ['update', 'delete'])) {
-    /** @var \Drupal\tide_site\TideSiteHelper $site_helper */
-    $site_helper = \Drupal::service('tide_site.helper');
-    $node_sites = $site_helper->getEntitySites($node);
-
     /** @var \Drupal\tide_site_restriction\Helper $site_restriction_helper */
     $site_restriction_helper = \Drupal::service('tide_site_restriction.helper');
     /** @var \Drupal\user\Entity\User $user */
@@ -44,13 +40,11 @@ function tide_site_restriction_node_access(NodeInterface $node, $op, AccountInte
     $user_sites = $site_restriction_helper->getUserSites($user);
     $user_can_bypass_restriction = $site_restriction_helper->canBypassRestriction($account);
     if (!$user_can_bypass_restriction) {
-      foreach ($user_sites as $site_id) {
-        if (isset($node_sites['ids'][$site_id]) || in_array($site_id, $node_sites['sections'])) {
-          return AccessResult::allowed()
-            ->addCacheableDependency($node)
-            ->addCacheTags(['site_restriction'])
-            ->cachePerUser();
-        }
+      if ($site_restriction_helper->hasRestrictionSites($node, $user_sites)) {
+        return AccessResult::allowed()
+          ->addCacheableDependency($node)
+          ->addCacheTags(['site_restriction'])
+          ->cachePerUser();
       }
       return AccessResult::forbidden('Access denied by Site Restriction.')
         ->addCacheableDependency($node)

@@ -6,6 +6,7 @@ use Drupal\Core\Entity\EntityRepositoryInterface;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Session\AccountInterface;
 use Drupal\Core\Session\AccountProxyInterface;
+use Drupal\node\NodeInterface;
 use Drupal\tide_site\TideSiteHelper;
 use Drupal\user\UserInterface;
 
@@ -85,6 +86,34 @@ class Helper extends TideSiteHelper {
     return $account->hasPermission('bypass node access')
       || $account->hasPermission('administer nodes')
       || $account->hasPermission('bypass site restriction');
+  }
+
+  /**
+   * Check if the user has node's sites.
+   *
+   * @param \Drupal\node\NodeInterface $node
+   *   The node passed in.
+   * @param array $user_sites
+   *   The sites that assigned to an user.
+   *
+   * @return array|mixed
+   *   Return TRUE or FALSE.
+   */
+  public function hasRestrictionSites(NodeInterface $node, array $user_sites) {
+    if (empty($user_sites)) {
+      return TRUE;
+    }
+    $field_names = ['field_node_primary_site', 'field_node_site'];
+    foreach ($field_names as $field_name) {
+      if ($node->hasField($field_name) && !$node->get($field_name)->isEmpty()) {
+        $values = $node->get($field_name)->getValue();
+        $site_ids = array_column($values, 'target_id');
+        if (count(array_intersect($site_ids, $user_sites)) > 0) {
+          return TRUE;
+        }
+      }
+    }
+    return FALSE;
   }
 
 }
