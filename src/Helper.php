@@ -116,4 +116,33 @@ class Helper extends TideSiteHelper {
     return FALSE;
   }
 
+  /**
+   * Returns site field names.
+   *
+   * @return array
+   *   Array.
+   */
+  public function getSiteFieldsName() {
+    return ['field_node_site', 'field_node_primary_site'];
+  }
+
+  /**
+   * Returns the last revision entity by giving a node.
+   *
+   * @param \Drupal\node\NodeInterface $node
+   *   The node.
+   *
+   * @return bool|\Drupal\Core\Entity\EntityInterface|null
+   *   Revision entity or false.
+   */
+  public function getLastNodeRevision(NodeInterface $node) {
+    $revision_ids = \Drupal::entityTypeManager()->getStorage('node')->revisionIds($node);
+    $last_revision_id = end($revision_ids);
+    if ($node->getRevisionId() != $last_revision_id) {
+      $last_revision = \Drupal::entityTypeManager()->getStorage('node')->loadRevision($last_revision_id);
+      return $last_revision;
+    }
+    return FALSE;
+  }
+
 }
