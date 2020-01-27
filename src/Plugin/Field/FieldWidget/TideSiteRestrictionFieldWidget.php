@@ -93,7 +93,6 @@ class TideSiteRestrictionFieldWidget extends OptionsButtonsWidget implements Con
       $element['#default_value'] = $element['#default_value'] ? $element['#default_value'] : key($element['#options']);
     }
     $element['#default_value'] = empty($element['#default_value']) ? array_keys($element['#options']) : $element['#default_value'];
-    $element['#attached']['library'][] = 'tide_site_restriction/tide_site_restriction_node_form';
     return $element;
   }
 
@@ -131,14 +130,7 @@ class TideSiteRestrictionFieldWidget extends OptionsButtonsWidget implements Con
    *   The options.
    */
   protected function userOptionsFilter(AccountProxyInterface $account, array $options, array $selected) {
-    $userSites = $this->helper->getUserSites(User::load($account->id()));
-    $result = [];
-    foreach ($userSites as $site) {
-      $trail = $this->helper->getSiteTrail($site);
-      $parent_id = reset($trail);
-      $result[] = $parent_id;
-    }
-    $allSites = array_merge(array_unique($result), $userSites, $selected);
+    $allSites = array_merge($this->helper->getUserSitesTrail(User::load($account->id())), $selected);
     $options = array_intersect_key($options, array_flip($allSites));
     return $options;
   }
@@ -149,13 +141,30 @@ class TideSiteRestrictionFieldWidget extends OptionsButtonsWidget implements Con
   public function massageFormValues(array $values, array $form, FormStateInterface $form_state) {
     $results = parent::massageFormValues($values, $form, $form_state);
     $options = [];
+    $node = $form_state->getFormObject()->getEntity();
+    if (!$this->helper->canBypassRestriction($this->currentUser)) {
+      if (!$node->isNew() && ($this->fieldDefinition->getName() != 'field_node_primary_site')) {
+        $last_revision = $this->helper->getLastNodeRevision($node);
+        $revision_value = $last_revision->get($this->fieldDefinition->getName())->getValue();
+        $user_sites = $this->helper->getUserSites(User::load($this->currentUser->id()));
+        $diff = array_diff(array_column($revision_value, 'target_id'), $user_sites);
+        $results = array_unique(array_merge(array_column($results, 'target_id'), $diff));
+        $chunks = array_chunk($results, 1);
+        $key = ['target_id'];
+        // Reassemble the results array.
+        $results = array_map(function ($chunk) use ($key) {
+          return array_combine($key, $chunk);
+        }, $chunks);
+      }
+    }
+    // Get Parent Ids.
     foreach ($results as $result) {
       $parents = $this->tideSiteHelper->getSiteTrail($result['target_id']);
       $parentSiteId = reset($parents);
       if ($parentSiteId == $result['target_id']) {
         continue;
       }
-      $options[$parentSiteId] = ['target_id' => $parentSiteId];
+      $options[] = ['target_id' => $parentSiteId];
     }
     return array_map('unserialize', array_unique(array_map('serialize', array_merge($results, $options))));
   }

@@ -16,7 +16,6 @@ use Drupal\user\Entity\User;
 use Drupal\user\UserInterface;
 use Drupal\views\Plugin\views\cache\CachePluginBase;
 use Drupal\views\ViewExecutable;
-use Drupal\taxonomy\Entity\Term;
 
 /**
  * Implements hook_entity_field_access().
@@ -141,55 +140,6 @@ function tide_site_restriction_form_views_exposed_form_alter(&$form, FormStateIn
         'closeOnSelect' => FALSE,
         'placeholder' => t('- Any -'),
       ];
-    }
-  }
-}
-
-/**
- * Implements hook_form_BASE_FORM_ID_alter().
- */
-function tide_site_restriction_form_node_form_alter(&$form, FormStateInterface $form_state, $form_id) {
-  $node = $form_state->getFormObject()->getEntity();
-  if (!$node->isNew()) {
-    $form['#validate'][] = '_site_restriction_validate';
-  }
-}
-
-/**
- * Site restriction validation.
- */
-function _site_restriction_validate($form, FormStateInterface $form_state) {
-  $node = $form_state->getFormObject()->getEntity();
-  /** @var \Drupal\tide_site_restriction\Helper $site_restriction_helper */
-  $site_restriction_helper = \Drupal::service('tide_site_restriction.helper');
-  $user = \Drupal::currentUser();
-  $field_names = $site_restriction_helper->getSiteFieldsName();
-  if ($site_restriction_helper->canBypassRestriction($user)) {
-    return;
-  }
-  if ($node) {
-    $user_sites = $site_restriction_helper->getUserSites(User::load($user->id()));
-    foreach ($field_names as $field_name) {
-      $node_values = array_column($node->get($field_name)
-        ->getValue(), 'target_id');
-      $form_values = array_column($form_state->getValue($field_name), 'target_id');
-      if (count($node_values) > count($form_values)) {
-        $diff_value = array_diff($node_values, $form_values);
-      }
-      else {
-        $diff_value = array_diff($form_values, $node_values);
-      }
-      if (empty($diff_value)) {
-        continue;
-      }
-      foreach ($diff_value as $value) {
-        if (!in_array($value, $user_sites)) {
-          $form_state->setErrorByName($field_name, t("You don't have permission to change the status of %site, please try again.", [
-            '%site' => Term::load($value) ? Term::load($value)
-              ->label() : 'site',
-          ]));
-        }
-      }
     }
   }
 }

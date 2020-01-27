@@ -138,11 +138,31 @@ class Helper extends TideSiteHelper {
   public function getLastNodeRevision(NodeInterface $node) {
     $revision_ids = \Drupal::entityTypeManager()->getStorage('node')->revisionIds($node);
     $last_revision_id = end($revision_ids);
-    if ($node->getRevisionId() != $last_revision_id) {
-      $last_revision = \Drupal::entityTypeManager()->getStorage('node')->loadRevision($last_revision_id);
-      return $last_revision;
+    if ($last_revision_id) {
+      return \Drupal::entityTypeManager()->getStorage('node')->loadRevision($last_revision_id);
     }
     return FALSE;
+  }
+
+  /**
+   * Build user's site trail.
+   *
+   * @param \Drupal\user\UserInterface $user
+   *   The user.
+   *
+   * @return array
+   *   Sites array or empty array.
+   */
+  public function getUserSitesTrail(UserInterface $user) {
+    $user_sites = $this->getUserSites($user);
+    $result = [];
+    foreach ($user_sites as $site) {
+      $trail = $this->getSiteTrail($site);
+      $parent_id = reset($trail);
+      $result[$parent_id] = $parent_id;
+      $result[$site] = $site;
+    }
+    return $result;
   }
 
 }
