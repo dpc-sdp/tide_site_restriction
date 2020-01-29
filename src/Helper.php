@@ -2,11 +2,11 @@
 
 namespace Drupal\tide_site_restriction;
 
+use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Entity\EntityRepositoryInterface;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Session\AccountInterface;
 use Drupal\Core\Session\AccountProxyInterface;
-use Drupal\node\NodeInterface;
 use Drupal\tide_site\TideSiteHelper;
 use Drupal\user\UserInterface;
 
@@ -91,22 +91,22 @@ class Helper extends TideSiteHelper {
   /**
    * Check if the user has node's sites.
    *
-   * @param \Drupal\node\NodeInterface $node
-   *   The node passed in.
+   * @param \Drupal\Core\Entity\EntityInterface $entity
+   *   Node or Media.
    * @param array $user_sites
-   *   The sites that assigned to an user.
+   *   User's sites.
    *
-   * @return array|mixed
-   *   Return TRUE or FALSE.
+   * @return bool
+   *   True or FALSE
    */
-  public function hasRestrictionSites(NodeInterface $node, array $user_sites) {
+  public function hasEntitySitesAccess(EntityInterface $entity, array $user_sites) {
     if (empty($user_sites)) {
-      return TRUE;
+      return FALSE;
     }
-    $field_names = ['field_node_primary_site', 'field_node_site'];
+    $field_names = $this->getSiteFieldsName();
     foreach ($field_names as $field_name) {
-      if ($node->hasField($field_name) && !$node->get($field_name)->isEmpty()) {
-        $values = $node->get($field_name)->getValue();
+      if ($entity->hasField($field_name) && !$entity->get($field_name)->isEmpty()) {
+        $values = $entity->get($field_name)->getValue();
         $site_ids = array_column($values, 'target_id');
         if (count(array_intersect($site_ids, $user_sites)) > 0) {
           return TRUE;
@@ -123,25 +123,7 @@ class Helper extends TideSiteHelper {
    *   Array.
    */
   public function getSiteFieldsName() {
-    return ['field_node_site', 'field_node_primary_site'];
-  }
-
-  /**
-   * Returns the last revision entity by giving a node.
-   *
-   * @param \Drupal\node\NodeInterface $node
-   *   The node.
-   *
-   * @return bool|\Drupal\Core\Entity\EntityInterface|null
-   *   Revision entity or false.
-   */
-  public function getLastNodeRevision(NodeInterface $node) {
-    $revision_ids = \Drupal::entityTypeManager()->getStorage('node')->revisionIds($node);
-    $last_revision_id = end($revision_ids);
-    if ($last_revision_id) {
-      return \Drupal::entityTypeManager()->getStorage('node')->loadRevision($last_revision_id);
-    }
-    return FALSE;
+    return ['field_node_site', 'field_node_primary_site', 'field_media_site'];
   }
 
   /**

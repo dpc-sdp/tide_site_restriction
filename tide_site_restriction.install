@@ -27,13 +27,19 @@ function tide_site_restriction_install() {
 
   $bundleInfo = \Drupal::service('entity_type.bundle.info');
   $entity_form_display_strorage = \Drupal::entityTypeManager()->getStorage('entity_form_display');
-  $fields = ['field_node_primary_site', 'field_node_site'];
-  foreach ($bundleInfo->getBundleInfo('node') as $bundle => $item) {
-    $entity_form_display = $entity_form_display_strorage->load('node.' . $bundle . '.default');
-    foreach ($fields as $field) {
-      $options = $entity_form_display->getComponent($field);
-      $options['type'] = 'tide_site_restriction_field_widget';
-      $entity_form_display->setComponent($field, $options)->save();
+  $fields = [
+    'field_node_primary_site' => 'node',
+    'field_node_site' => 'node',
+    'field_media_site' => 'media',
+  ];
+  foreach ($fields as $field_name => $type) {
+    foreach ($bundleInfo->getBundleInfo($type) as $bundle => $item) {
+      $entity_form_display = $entity_form_display_strorage->load($type . '.' . $bundle . '.default');
+      foreach ($fields as $field) {
+        $options = $entity_form_display->getComponent($field);
+        $options['type'] = 'tide_site_restriction_field_widget';
+        $entity_form_display->setComponent($field, $options)->save();
+      }
     }
   }
   // Grants new permissions to Site Admins.

@@ -11,11 +11,11 @@ use Drupal\Core\Field\FieldDefinitionInterface;
 use Drupal\Core\Field\FieldItemListInterface;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Session\AccountInterface;
-use Drupal\node\NodeInterface;
 use Drupal\user\Entity\User;
 use Drupal\user\UserInterface;
 use Drupal\views\Plugin\views\cache\CachePluginBase;
 use Drupal\views\ViewExecutable;
+use Drupal\Core\Entity\EntityInterface;
 
 /**
  * Implements hook_entity_field_access().
@@ -29,38 +29,43 @@ function tide_site_restriction_entity_field_access($operation, FieldDefinitionIn
 }
 
 /**
- * Implements hook_node_access().
+ * Implements hook_entity_access().
  */
-function tide_site_restriction_node_access(NodeInterface $node, $op, AccountInterface $account) {
-  if ($account->isAuthenticated() && in_array($op, ['update', 'delete'])) {
-    /** @var \Drupal\tide_site_restriction\Helper $site_restriction_helper */
-    $site_restriction_helper = \Drupal::service('tide_site_restriction.helper');
+function tide_site_restriction_entity_access(EntityInterface $entity, $operation, AccountInterface $account) {
+  /** @var \Drupal\tide_site_restriction\Helper $site_restriction_helper */
+  $site_restriction_helper = \Drupal::service('tide_site_restriction.helper');
+  if (!in_array($entity->getEntityTypeId(), $site_restriction_helper->getSupportedEntityTypes())) {
+    return AccessResult::neutral()->addCacheableDependency($entity);
+  }
+  if ($account->isAuthenticated() && in_array($operation, ['update', 'delete'])) {
     /** @var \Drupal\user\Entity\User $user */
     $user = User::load($account->id());
     $user_sites = $site_restriction_helper->getUserSites($user);
     $user_can_bypass_restriction = $site_restriction_helper->canBypassRestriction($account);
     if (!$user_can_bypass_restriction) {
-      if ($site_restriction_helper->hasRestrictionSites($node, $user_sites)) {
+      if ($site_restriction_helper->hasEntitySitesAccess($entity, $user_sites)) {
         return AccessResult::allowed()
-          ->addCacheableDependency($node)
+          ->addCacheableDependency($entity)
           ->addCacheTags(['site_restriction'])
           ->cachePerUser();
       }
       return AccessResult::forbidden('Access denied by Site Restriction.')
-        ->addCacheableDependency($node)
+        ->addCacheableDependency($entity)
         ->addCacheTags(['site_restriction'])
         ->cachePerUser();
     }
   }
 
-  return AccessResult::neutral()->addCacheableDependency($node);
+  return AccessResult::neutral()->addCacheableDependency($entity);
 }
 
 /**
  * Implements hook_views_post_render().
  */
 function tide_site_restriction_views_post_render(ViewExecutable $view, &$output, CachePluginBase $cache) {
-  if ($view->getBaseEntityType()->id() == 'node') {
+  /** @var \Drupal\tide_site_restriction\Helper $site_restriction_helper */
+  $site_restriction_helper = \Drupal::service('tide_site_restriction.helper');
+  if (in_array($view->getBaseEntityType()->id(), $site_restriction_helper->getSupportedEntityTypes())) {
     $output['#cache']['tags'][] = 'site_restriction';
     if (\Drupal::currentUser()->isAuthenticated()) {
       $output['#cache']['tags'][] = 'user:' . \Drupal::currentUser()->id();
@@ -72,7 +77,9 @@ function tide_site_restriction_views_post_render(ViewExecutable $view, &$output,
  * Implements hook_views_pre_render().
  */
 function tide_site_restriction_views_pre_render(ViewExecutable $view) {
-  if ($view->getBaseEntityType()->id() == 'node') {
+  /** @var \Drupal\tide_site_restriction\Helper $site_restriction_helper */
+  $site_restriction_helper = \Drupal::service('tide_site_restriction.helper');
+  if (in_array($view->getBaseEntityType()->id(), $site_restriction_helper->getSupportedEntityTypes())) {
     foreach ($view->result as $row) {
       if ($row->_entity) {
         $row->_entity->addCacheTags(['site_restriction']);
@@ -96,28 +103,34 @@ function tide_site_restriction_user_presave(UserInterface $user) {
  */
 function tide_site_restriction_views_pre_view(ViewExecutable $view, $display_id, array &$args) {
   // Pre-select user sites in Summary Content admin view.
-  if ($view->id() == 'summary_contents_filters') {
-    if ($display_id == 'page_1') {
-      /** @var \Drupal\tide_site_restriction\Helper $site_restriction_helper */
-      $site_restriction_helper = \Drupal::service('tide_site_restriction.helper');
-      $account = \Drupal::currentUser();
-      $user_can_bypass_restriction = $site_restriction_helper->canBypassRestriction($account);;
+  $view_ids = ['summary_contents_filters', 'media'];
+  $display_ids = ['page_1' => 'field_node_site_target_id', 'media_page_list' => 'field_media_site_target_id'];
+  foreach ($view_ids as $view_id) {
+    if ($view->id() == $view_id) {
+      foreach ($display_ids as $id => $filter) {
+        if ($display_id == $id) {
+          /** @var \Drupal\tide_site_restriction\Helper $site_restriction_helper */
+          $site_restriction_helper = \Drupal::service('tide_site_restriction.helper');
+          $account = \Drupal::currentUser();
+          $user_can_bypass_restriction = $site_restriction_helper->canBypassRestriction($account);;
 
-      $filters = $view->display_handler->getOption('filters');
-      if (!empty($filters['field_node_site_target_id'])) {
-        // Change the filter to accept multiple values.
-        $filters['field_node_site_target_id']['expose']['multiple'] = TRUE;
-        $view->display_handler->setOption('filters', $filters);
+          $filters = $view->display_handler->getOption('filters');
+          if (!empty($filters[$filter])) {
+            // Change the filter to accept multiple values.
+            $filters[$filter]['expose']['multiple'] = TRUE;
+            $view->display_handler->setOption('filters', $filters);
 
-        // Pre-select the user sites if the filter is empty.
-        if (!$user_can_bypass_restriction) {
-          /** @var \Drupal\user\Entity\User $user */
-          $user = User::load($account->id());
-          $user_sites = $site_restriction_helper->getUserSites($user);
-          $exposed_input = $view->getExposedInput();
-          if (!empty($user_sites) && empty($exposed_input)) {
-            $exposed_input['field_node_site_target_id'] = $user_sites;
-            $view->setExposedInput($exposed_input);
+            // Pre-select the user sites if the filter is empty.
+            if (!$user_can_bypass_restriction) {
+              /** @var \Drupal\user\Entity\User $user */
+              $user = User::load($account->id());
+              $user_sites = $site_restriction_helper->getUserSites($user);
+              $exposed_input = $view->getExposedInput();
+              if (!empty($user_sites) && empty($exposed_input)) {
+                $exposed_input[$filter] = $user_sites;
+                $view->setExposedInput($exposed_input);
+              }
+            }
           }
         }
       }
@@ -130,16 +143,22 @@ function tide_site_restriction_views_pre_view(ViewExecutable $view, $display_id,
  */
 function tide_site_restriction_form_views_exposed_form_alter(&$form, FormStateInterface $form_state, $form_id) {
   // Enable Select2 to Site filter of Content Admin view.
-  if (!empty($form['#id']) && $form['#id'] == 'views-exposed-form-summary-contents-filters-page-1') {
-    if (!empty($form['field_node_site_target_id']['#multiple'])) {
-      $form['field_node_site_target_id']['#type'] = 'select2';
-      $form['field_node_site_target_id']['#select2'] = [
-        'allowClear' => TRUE,
-        'dropdownAutoWidth' => FALSE,
-        'width' => 'resolve',
-        'closeOnSelect' => FALSE,
-        'placeholder' => t('- Any -'),
-      ];
+  $form_ids = [
+    'views-exposed-form-media-media-page-list' => 'field_media_site_target_id',
+    'views-exposed-form-summary-contents-filters-page-1' => 'field_node_site_target_id',
+  ];
+  foreach ($form_ids as $form_id => $filter) {
+    if (!empty($form['#id']) && $form['#id'] == $form_id) {
+      if (!empty($form[$filter]['#multiple'])) {
+        $form[$filter]['#type'] = 'select2';
+        $form[$filter]['#select2'] = [
+          'allowClear' => TRUE,
+          'dropdownAutoWidth' => FALSE,
+          'width' => 'resolve',
+          'closeOnSelect' => FALSE,
+          'placeholder' => t('- Any -'),
+        ];
+      }
     }
   }
 }

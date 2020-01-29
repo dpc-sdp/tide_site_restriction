@@ -2,6 +2,7 @@
 
 namespace Drupal\tide_site_restriction\Plugin\Field\FieldWidget;
 
+use Drupal\content_moderation\ModerationInformation;
 use Drupal\Core\Entity\FieldableEntityInterface;
 use Drupal\Core\Field\FieldDefinitionInterface;
 use Drupal\Core\Field\FieldItemListInterface;
@@ -9,8 +10,7 @@ use Drupal\Core\Field\Plugin\Field\FieldWidget\OptionsButtonsWidget;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
 use Drupal\Core\Session\AccountProxyInterface;
-use Drupal\node\NodeInterface;
-use Drupal\tide_site\TideSiteHelper;
+use Drupal\tide_site\TideSiteFields;
 use Drupal\tide_site_restriction\Helper;
 use Drupal\user\Entity\User;
 use Symfony\Component\DependencyInjection\ContainerInterface;
@@ -45,20 +45,20 @@ class TideSiteRestrictionFieldWidget extends OptionsButtonsWidget implements Con
   protected $helper;
 
   /**
-   * Tide site helper.
+   * ModerationInformation helper class.
    *
-   * @var \Drupal\tide_site\TideSiteHelper
+   * @var \Drupal\content_moderation\ModerationInformation
    */
-  protected $tideSiteHelper;
+  protected $moderationInformation;
 
   /**
    * {@inheritdoc}
    */
-  public function __construct($plugin_id, $plugin_definition, FieldDefinitionInterface $field_definition, array $settings, array $third_party_settings, AccountProxyInterface $currentUser, Helper $helper, TideSiteHelper $tideSiteHelper) {
+  public function __construct($plugin_id, $plugin_definition, FieldDefinitionInterface $field_definition, array $settings, array $third_party_settings, AccountProxyInterface $currentUser, Helper $helper, ModerationInformation $moderation_information) {
     parent::__construct($plugin_id, $plugin_definition, $field_definition, $settings, $third_party_settings);
     $this->currentUser = $currentUser;
     $this->helper = $helper;
-    $this->tideSiteHelper = $tideSiteHelper;
+    $this->moderationInformation = $moderation_information;
   }
 
   /**
@@ -73,7 +73,7 @@ class TideSiteRestrictionFieldWidget extends OptionsButtonsWidget implements Con
       $configuration['third_party_settings'],
       $container->get('current_user'),
       $container->get('tide_site_restriction.helper'),
-      $container->get('tide_site.helper')
+      $container->get('content_moderation.moderation_information')
     );
   }
 
@@ -82,17 +82,20 @@ class TideSiteRestrictionFieldWidget extends OptionsButtonsWidget implements Con
    */
   public function formElement(FieldItemListInterface $items, $delta, array $element, array &$form, FormStateInterface $form_state) {
     $element = parent::formElement($items, $delta, $element, $form, $form_state);
-    $userSites = $this->helper->getUserSites(User::load($this->currentUser->id()));
-    if ($userSites) {
+    $current_user = User::load($this->currentUser->id());
+    $userSites = $this->helper->getUserSites($current_user);
+    if ($userSites && !$this->helper->canBypassRestriction($current_user)) {
       $unavailableSites = array_diff_key($element['#options'], $userSites);
       foreach ($unavailableSites as $key => $item) {
         $element[$key] = ['#disabled' => TRUE];
       }
     }
-    if (!is_array($element['#default_value'])) {
+    if ($this->multiple) {
+      $element['#default_value'] = empty($element['#default_value']) ? !$this->helper->canBypassRestriction($current_user) ? array_keys($element['#options']) : [] : $element['#default_value'];
+    }
+    else {
       $element['#default_value'] = $element['#default_value'] ? $element['#default_value'] : key($element['#options']);
     }
-    $element['#default_value'] = empty($element['#default_value']) ? array_keys($element['#options']) : $element['#default_value'];
     return $element;
   }
 
@@ -102,17 +105,14 @@ class TideSiteRestrictionFieldWidget extends OptionsButtonsWidget implements Con
   protected function getOptions(FieldableEntityInterface $entity) {
     $options = parent::getOptions($entity);
     $selected = [];
-    if ($entity instanceof NodeInterface) {
-      $field_name = $this->fieldDefinition->getName();
-      if ($entity->hasField($field_name) && !$entity->get($field_name)->isEmpty()) {
-        $values = $entity->get($field_name)->getValue();
-        $selected = array_column($values, 'target_id');
-      }
-    }
     if ($this->helper->canBypassRestriction($this->currentUser)) {
       return $options;
     }
-
+    $field_name = $this->fieldDefinition->getName();
+    if ($entity->hasField($field_name) && !$entity->get($field_name)->isEmpty()) {
+      $values = $entity->get($field_name)->getValue();
+      $selected = array_column($values, 'target_id');
+    }
     return $this->userOptionsFilter($this->currentUser, $options, $selected);
   }
 
@@ -141,10 +141,10 @@ class TideSiteRestrictionFieldWidget extends OptionsButtonsWidget implements Con
   public function massageFormValues(array $values, array $form, FormStateInterface $form_state) {
     $results = parent::massageFormValues($values, $form, $form_state);
     $options = [];
-    $node = $form_state->getFormObject()->getEntity();
+    $entity = $form_state->getFormObject()->getEntity();
     if (!$this->helper->canBypassRestriction($this->currentUser)) {
-      if (!$node->isNew() && ($this->fieldDefinition->getName() != 'field_node_primary_site')) {
-        $last_revision = $this->helper->getLastNodeRevision($node);
+      if (!$entity->isNew() && $this->multiple) {
+        $last_revision = $this->moderationInformation->getLatestRevision($entity->getEntityTypeId(), $entity->id());
         $revision_value = $last_revision->get($this->fieldDefinition->getName())->getValue();
         $user_sites = $this->helper->getUserSites(User::load($this->currentUser->id()));
         $diff = array_diff(array_column($revision_value, 'target_id'), $user_sites);
@@ -159,7 +159,7 @@ class TideSiteRestrictionFieldWidget extends OptionsButtonsWidget implements Con
     }
     // Get Parent Ids.
     foreach ($results as $result) {
-      $parents = $this->tideSiteHelper->getSiteTrail($result['target_id']);
+      $parents = $this->helper->getSiteTrail($result['target_id']);
       $parentSiteId = reset($parents);
       if ($parentSiteId == $result['target_id']) {
         continue;
@@ -173,7 +173,7 @@ class TideSiteRestrictionFieldWidget extends OptionsButtonsWidget implements Con
    * {@inheritdoc}
    */
   public static function isApplicable(FieldDefinitionInterface $field_definition) {
-    return (($field_definition->getName() == 'field_node_primary_site' || $field_definition->getName() == 'field_node_site') && $field_definition->getTargetEntityTypeId() == 'node');
+    return TideSiteFields::isSiteField($field_definition->getName());
   }
 
 }
