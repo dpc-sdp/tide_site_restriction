@@ -44,7 +44,7 @@ function tide_site_restriction_entity_access(EntityInterface $entity, $operation
     $user_can_bypass_restriction = $site_restriction_helper->canBypassRestriction($account);
     if (!$user_can_bypass_restriction) {
       if ($site_restriction_helper->hasEntitySitesAccess($entity, $user_sites)) {
-        return AccessResult::allowed()
+        return AccessResult::neutral()
           ->addCacheableDependency($entity)
           ->addCacheTags(['site_restriction'])
           ->cachePerUser();
