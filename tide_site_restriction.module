@@ -16,6 +16,7 @@ use Drupal\user\UserInterface;
 use Drupal\views\Plugin\views\cache\CachePluginBase;
 use Drupal\views\ViewExecutable;
 use Drupal\Core\Entity\EntityInterface;
+use Drupal\Core\Entity\Display\EntityViewDisplayInterface;
 
 /**
  * Implements hook_entity_field_access().
@@ -160,5 +161,39 @@ function tide_site_restriction_form_views_exposed_form_alter(&$form, FormStateIn
         ];
       }
     }
+  }
+}
+
+/**
+ * Implements hook_entity_view_alter().
+ */
+function tide_site_restriction_entity_view_alter(array &$build, EntityInterface $entity, EntityViewDisplayInterface $display) {
+  if (isset($build['content_moderation_control'])) {
+    /** @var \Drupal\Core\Session\AccountProxyInterface $account */
+    $account = Drupal::service('current_user');
+    /** @var \Drupal\tide_site_restriction\Helper $helper */
+    $helper = Drupal::service('tide_site_restriction.helper');
+    if ($helper->canBypassRestriction($account)) {
+      return;
+    }
+    $user_sites = $helper->getUserSites(User::load($account->id()));
+    if ($helper->hasEntitySitesAccess($entity, $user_sites)) {
+      /** @var \Drupal\content_moderation\ModerationInformation $contentModerationInfo */
+      $contentModerationInfo = \Drupal::service('content_moderation.moderation_information');
+      $moderation_state = $entity->get('moderation_state')->value;
+      if ($moderation_state) {
+        $workflow = $contentModerationInfo->getWorkflowForEntity($entity);
+        if ($workflow->getTypePlugin()->getState($moderation_state)->isPublishedState()) {
+          return;
+        }
+        if (in_array('approver', $account->getRoles())) {
+          return;
+        }
+        if ($moderation_state == 'draft') {
+          return;
+        }
+      }
+    }
+    unset($build['content_moderation_control']);
   }
 }
