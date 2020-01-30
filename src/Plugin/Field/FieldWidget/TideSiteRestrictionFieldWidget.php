@@ -3,6 +3,7 @@
 namespace Drupal\tide_site_restriction\Plugin\Field\FieldWidget;
 
 use Drupal\content_moderation\ModerationInformation;
+use Drupal\Core\Entity\EntityFormInterface;
 use Drupal\Core\Entity\FieldableEntityInterface;
 use Drupal\Core\Field\FieldDefinitionInterface;
 use Drupal\Core\Field\FieldItemListInterface;
@@ -140,9 +141,17 @@ class TideSiteRestrictionFieldWidget extends OptionsButtonsWidget implements Con
    */
   public function massageFormValues(array $values, array $form, FormStateInterface $form_state) {
     $results = parent::massageFormValues($values, $form, $form_state);
+    // If the user could bypass the restrictions, returns results directly.
+    if ($this->helper->canBypassRestriction($this->currentUser)) {
+      return $results;
+    }
+    // If the form object was not an entity form, eg, entity browser form,
+    // Returns results directly.
     $options = [];
-    $entity = $form_state->getFormObject()->getEntity();
-    if (!$this->helper->canBypassRestriction($this->currentUser)) {
+    if ($form_state->getFormObject() instanceof EntityFormInterface) {
+      $entity = $form_state->getFormObject()->getEntity();
+      // Calculates the results if the user could not bypass the restrictions
+      // and the FormObject was entity form.
       if (!$entity->isNew() && $this->multiple) {
         $last_revision = $this->moderationInformation->getLatestRevision($entity->getEntityTypeId(), $entity->id());
         $revision_value = $last_revision->get($this->fieldDefinition->getName())->getValue();
