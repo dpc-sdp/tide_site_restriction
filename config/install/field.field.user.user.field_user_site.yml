@@ -15,7 +15,7 @@ entity_type: user
 bundle: user
 label: 'Site Restriction'
 description: 'This user will only have editorial access to content belonging to the selected Sites and Sub-sites. Leave this field empty to grant the user access to any sites.'
-required: false
+required: true
 translatable: false
 default_value: {  }
 default_value_callback: ''
