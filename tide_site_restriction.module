@@ -165,6 +165,8 @@ function tide_site_restriction_form_views_exposed_form_alter(&$form, FormStateIn
 }
 
 /**
+ * Extends content_moderation_entity_view.
+ *
  * Implements hook_entity_view_alter().
  */
 function tide_site_restriction_entity_view_alter(array &$build, EntityInterface $entity, EntityViewDisplayInterface $display) {
@@ -173,6 +175,7 @@ function tide_site_restriction_entity_view_alter(array &$build, EntityInterface 
     $account = Drupal::service('current_user');
     /** @var \Drupal\tide_site_restriction\Helper $helper */
     $helper = Drupal::service('tide_site_restriction.helper');
+    // Do nothing if the user could bypass the permission check.
     if ($helper->canBypassRestriction($account)) {
       return;
     }
@@ -183,17 +186,31 @@ function tide_site_restriction_entity_view_alter(array &$build, EntityInterface 
       $moderation_state = $entity->get('moderation_state')->value;
       if ($moderation_state) {
         $workflow = $contentModerationInfo->getWorkflowForEntity($entity);
+        // Do nothing if the content published, lets content_moderation module
+        // take care of the rest of logic.
         if ($workflow->getTypePlugin()->getState($moderation_state)->isPublishedState()) {
           return;
         }
+        // Do nothing if current user has approver role.
+        // Notes:
+        // 1. If the entity had been published, the `content_moderation_control`
+        // Form will be hide from the entity view by default, this behavior
+        // could not be altered. The user needs to go to /edit page for changing
+        // the moderation stats.
+        // 2. Otherwise, the approver could do anything they can do based on the
+        // permissions that tide_site_restriction defined.
         if (in_array('approver', $account->getRoles())) {
           return;
         }
+        // Do nothing if current moderation state is draft.
+        // In this circumstance, editor, who has permission to change the
+        // moderation state, can only change the entity to `needs to review`.
         if ($moderation_state == 'draft') {
           return;
         }
       }
     }
+    // Otherwise, unset the form from the entity view.
     unset($build['content_moderation_control']);
   }
 }
