@@ -162,3 +162,39 @@ function tide_site_restriction_form_views_exposed_form_alter(&$form, FormStateIn
     }
   }
 }
+
+/**
+ * Implements hook_form_FORM_ID_alter().
+ */
+function tide_site_restriction_form_user_form_alter(&$form, FormStateInterface $form_state, $form_id) {
+  if (isset($form['field_user_site'])) {
+    $form['field_user_site']['widget']['#states'] = [
+      'invisible' => [
+        [':input[name="roles[site_admin]"]' => ['checked' => TRUE]],
+        'or',
+        [':input[name="role_change[site_admin]"]' => ['checked' => TRUE]],
+        'or',
+        [':input[name="roles[administrator]"]' => ['checked' => TRUE]],
+      ],
+    ];
+    $form['#validate'][] = '_tide_site_restriction_validation';
+  }
+}
+
+/**
+ * Custom validation.
+ */
+function _tide_site_restriction_validation(&$form, FormStateInterface $form_state) {
+  $values = $form_state->getValue(['role_change']);
+  $roles = [];
+  foreach ($values as $value) {
+    $roles[] = $value['target_id'];
+  }
+  // site_admin and administrator roles will bypass the validation.
+  if (empty(array_intersect(['site_admin', 'administrator'], $roles))) {
+    // If field_user_site was empty, stops process.
+    if (empty($form_state->getValue('field_user_site'))) {
+      $form_state->setErrorByName('field_user_site', t('Site Restriction field is required.'));
+    }
+  }
+}
