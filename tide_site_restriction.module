@@ -21,7 +21,7 @@ use Drupal\Core\Entity\EntityInterface;
  * Implements hook_entity_field_access().
  */
 function tide_site_restriction_entity_field_access($operation, FieldDefinitionInterface $field_definition, AccountInterface $account, FieldItemListInterface $items = NULL) {
-  if ($field_definition->getName() == 'field_user_site') {
+  if ($field_definition->getName() == 'field_user_site' && $operation == 'edit') {
     return $account->hasPermission('administer site restriction') ? AccessResult::allowed() : AccessResult::forbidden();
   }
 
