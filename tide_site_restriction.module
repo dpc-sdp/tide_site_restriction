@@ -57,6 +57,16 @@ function tide_site_restriction_entity_access(EntityInterface $entity, $operation
     }
   }
 
+  $moderation_info = Drupal::service('content_moderation.moderation_information');
+  if ($moderation_info->isModeratedEntity($entity)) {
+    if ($account->isAuthenticated() && $operation == 'view' && $entity->moderation_state->value == 'draft') {
+      return AccessResult::forbidden('Access denied by Site Restriction.')
+        ->addCacheableDependency($entity)
+        ->addCacheTags(['site_restriction'])
+        ->cachePerUser();
+    }
+  }
+
   return AccessResult::neutral()->addCacheableDependency($entity);
 }
 
