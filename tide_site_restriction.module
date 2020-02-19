@@ -16,6 +16,7 @@ use Drupal\user\UserInterface;
 use Drupal\views\Plugin\views\cache\CachePluginBase;
 use Drupal\views\ViewExecutable;
 use Drupal\Core\Entity\EntityInterface;
+use Drupal\node\Entity\Node;
 
 /**
  * Implements hook_entity_field_access().
@@ -161,4 +162,61 @@ function tide_site_restriction_form_views_exposed_form_alter(&$form, FormStateIn
       }
     }
   }
+}
+
+/**
+ * Implements hook_node_access_records().
+ */
+function tide_site_restriction_node_access_records(Node $node) {
+  $grants = [];
+  if (!$node->isPublished()) {
+    $sites_values = $node->get('field_node_site')->getValue();
+    if (empty($sites_values)) {
+      return $grants;
+    }
+    $sites = array_column($sites_values, 'target_id');
+    foreach ($sites as $site) {
+      $grants[] = [
+        'realm' => 'tide_site_restriction',
+        'gid' => $site,
+        'grant_view' => 1,
+        'grant_update' => 0,
+        'grant_delete' => 0,
+        'nid' => $node->id(),
+      ];
+    }
+  }
+  return $grants;
+}
+
+/**
+ * Implements hook_node_grants().
+ */
+function tide_site_restriction_node_grants(AccountInterface $account, $op) {
+  $user = User::load($account->id());
+  $user_sites = $user->get('field_user_site')->getValue();
+  if (empty($user_sites)) {
+    return [];
+  }
+  $sites = array_column($user_sites, 'target_id');
+  $grants = [];
+  if ($op == 'view') {
+    foreach ($sites as $site) {
+      $grants['tide_site_restriction'][] = $site;
+    }
+    return $grants;
+  }
+}
+
+/**
+ * Implements hook_node_grants_alter().
+ */
+function tide_site_restriction_node_grants_alter(&$grants, AccountInterface $account, $op) {
+  foreach ($grants as $realm => $gid) {
+    // Other modules should respect to the tide_site_restriction module.
+    if ($realm != 'tide_site_restriction') {
+      unset($grants[$realm]);
+    }
+  }
+  return $grants;
 }
