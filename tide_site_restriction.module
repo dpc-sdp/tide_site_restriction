@@ -185,16 +185,37 @@ function tide_site_restriction_form_user_form_alter(&$form, FormStateInterface $
  * Custom validation.
  */
 function _tide_site_restriction_validation(&$form, FormStateInterface $form_state) {
-  $values = $form_state->getValue(['role_change']);
-  $roles = [];
-  foreach ($values as $value) {
-    $roles[] = $value['target_id'];
+  $values = $form_state->getValue(['roles']);
+  /** @var \Drupal\tide_site_restriction\Helper $site_restriction_helper */
+  $site_restriction_helper = \Drupal::service('tide_site_restriction.helper');
+  $fake_user = clone User::getAnonymousUser();
+  foreach ($values as $role) {
+    if ($role == 'authenticated') {
+      continue;
+    }
+    $fake_user->addRole($role);
   }
+
   // site_admin and administrator roles will bypass the validation.
-  if (empty(array_intersect(['site_admin', 'administrator'], $roles))) {
-    // If field_user_site was empty, stops process.
+  //
+  // #states required is not working in form API - checkboxes.
+  //
+  // The solution is that not makes the field required in the field UI but in
+  // a custom validation function. So there is a custom * showing in the field,
+  // see tide_site_restriction_preprocess_fieldset(&$variables) in this file.
+  if (!$site_restriction_helper->canBypassRestriction($fake_user)) {
     if (empty($form_state->getValue('field_user_site'))) {
       $form_state->setErrorByName('field_user_site', t('Site Restriction field is required.'));
     }
+  }
+}
+
+/**
+ * Implements hook_preprocess_HOOK().
+ */
+function tide_site_restriction_preprocess_fieldset(&$variables) {
+  if (isset($variables['element']['#field_name']) && $variables['element']['#field_name'] == 'field_user_site') {
+    // Adds '*' to field_user_site.
+    $variables['legend']['attributes']->addClass('form-required');
   }
 }
