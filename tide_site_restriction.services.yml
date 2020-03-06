@@ -4,3 +4,7 @@ services:
     arguments: ['@entity_type.manager', '@entity.repository', '@current_user']
     calls:
       - [setContainer, ['@service_container']]
+  tide_site_restriction.event_subscriber:
+    class: Drupal\tide_site_restriction\EventSubscriber\TideSiteRestrictionRouterAlter
+    tags:
+      - { name: event_subscriber }
