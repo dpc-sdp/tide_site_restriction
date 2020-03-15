@@ -16,6 +16,7 @@ use Drupal\user\UserInterface;
 use Drupal\views\Plugin\views\cache\CachePluginBase;
 use Drupal\views\ViewExecutable;
 use Drupal\Core\Entity\EntityInterface;
+use Drupal\user\Entity\Role;
 
 /**
  * Implements hook_entity_field_access().
@@ -168,15 +169,33 @@ function tide_site_restriction_form_views_exposed_form_alter(&$form, FormStateIn
  */
 function tide_site_restriction_form_user_form_alter(&$form, FormStateInterface $form_state, $form_id) {
   if (isset($form['field_user_site'])) {
-    $form['field_user_site']['widget']['#states'] = [
-      'invisible' => [
-        [':input[name="roles[site_admin]"]' => ['checked' => TRUE]],
-        'or',
-        [':input[name="role_change[site_admin]"]' => ['checked' => TRUE]],
-        'or',
-        [':input[name="roles[administrator]"]' => ['checked' => TRUE]],
-      ],
-    ];
+    $roles = Role::loadMultiple();
+    $states = [];
+    foreach ($roles as $role_id => $role) {
+      if ($role->hasPermission('bypass node access') || $role->hasPermission('administer nodes') || $role->hasPermission('bypass site restriction')) {
+        $states[] = [
+          [':input[name="roles[' . $role_id . ']"]' => ['checked' => TRUE]],
+          'or',
+          // We have drupal/role_delegation dependency, so need to check
+          // role_change name.
+          [':input[name="role_change[' . $role_id . ']"]' => ['checked' => TRUE]],
+          'or',
+        ];
+      }
+    }
+    $results = [];
+    if ($states) {
+      foreach ($states as $state) {
+        $results = array_merge($results, $state);
+      }
+      // Removes the last 'or'.
+      if (end($results) == 'or') {
+        array_pop($results);
+      }
+      $form['field_user_site']['widget']['#states'] = [
+        'invisible' => $results,
+      ];
+    }
     $form['#validate'][] = '_tide_site_restriction_validation';
   }
 }
@@ -185,27 +204,24 @@ function tide_site_restriction_form_user_form_alter(&$form, FormStateInterface $
  * Custom validation.
  */
 function _tide_site_restriction_validation(&$form, FormStateInterface $form_state) {
-  $values = $form_state->getValue(['roles']);
-  /** @var \Drupal\tide_site_restriction\Helper $site_restriction_helper */
-  $site_restriction_helper = \Drupal::service('tide_site_restriction.helper');
-  $fake_user = clone User::getAnonymousUser();
-  foreach ($values as $role) {
-    if ($role == 'authenticated') {
-      continue;
-    }
-    $fake_user->addRole($role);
+  if (!isset($form['role_change']['#access']) || !$form['role_change']['#access']) {
+    $values = $form_state->getValue('roles');
   }
-
-  // site_admin and administrator roles will bypass the validation.
-  //
-  // #states required is not working in form API - checkboxes.
-  //
-  // The solution is that not makes the field required in the field UI but in
-  // a custom validation function. So there is a custom * showing in the field,
-  // see tide_site_restriction_preprocess_fieldset(&$variables) in this file.
-  if (!$site_restriction_helper->canBypassRestriction($fake_user)) {
+  else {
+    $values = array_column($form_state->getValue('role_change'), 'target_id');
+  }
+  if ($values) {
+    $roles = Role::loadMultiple($values);
     if (empty($form_state->getValue('field_user_site'))) {
-      $form_state->setErrorByName('field_user_site', t('Site Restriction field is required.'));
+      $result = FALSE;
+      foreach ($roles as $role) {
+        if ($role->hasPermission('bypass node access') || $role->hasPermission('administer nodes') || $role->hasPermission('bypass site restriction')) {
+          $result = TRUE;
+        }
+      }
+      if (!$result) {
+        $form_state->setErrorByName('field_user_site', t('Site Restriction field is required.'));
+      }
     }
   }
 }
