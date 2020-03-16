@@ -1,0 +1,7 @@
+tide_site_restriction.sites_allocation_tab:
+  path: '/user/{user}/sites_allocation'
+  defaults:
+    _controller: '\Drupal\tide_site_restriction\Controller\TideSiteRestrictionController::sitesAllocationTab'
+    _title: 'Site permissions'
+  requirements:
+    _permission: 'access content'
