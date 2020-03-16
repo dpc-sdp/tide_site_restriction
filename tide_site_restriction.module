@@ -204,11 +204,12 @@ function tide_site_restriction_form_user_form_alter(&$form, FormStateInterface $
  * Custom validation.
  */
 function _tide_site_restriction_validation(&$form, FormStateInterface $form_state) {
-  if (\Drupal::service('module_handler')->moduleExists(['role_delegation']) {
+  if (\Drupal::service('module_handler')->moduleExists(['role_delegation'])) {
     $values = array_column($form_state->getValue('role_change'), 'target_id');
-   } else {
+  }
+  else {
     $values = $form_state->getValue('roles');
-   }
+  }
   if ($values) {
     $roles = Role::loadMultiple($values);
     if (empty($form_state->getValue('field_user_site'))) {
