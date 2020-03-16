@@ -14,7 +14,7 @@ field_name: field_user_site
 entity_type: user
 bundle: user
 label: 'Site Restriction'
-description: 'This user will only have editorial access to content belonging to the selected Sites and Sub-sites.'
+description: 'This user will only have editorial access to content belonging to the selected Sites and Sub-sites. This field is optional for roles permitted to bypass site restrictions. See the permissions sub-system for the roles that can bypass.'
 required: false
 translatable: false
 default_value: {  }
