@@ -2,6 +2,7 @@
 
 namespace Drupal\tide_site_restriction;
 
+use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Entity\EntityRepositoryInterface;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Session\AccountInterface;
@@ -85,6 +86,65 @@ class Helper extends TideSiteHelper {
     return $account->hasPermission('bypass node access')
       || $account->hasPermission('administer nodes')
       || $account->hasPermission('bypass site restriction');
+  }
+
+  /**
+   * Check if the user has node's sites.
+   *
+   * @param \Drupal\Core\Entity\EntityInterface $entity
+   *   Node or Media.
+   * @param array $user_sites
+   *   User's sites.
+   *
+   * @return bool
+   *   True or FALSE
+   */
+  public function hasEntitySitesAccess(EntityInterface $entity, array $user_sites) {
+    if (empty($user_sites)) {
+      return FALSE;
+    }
+    $field_names = $this->getSiteFieldsName();
+    foreach ($field_names as $field_name) {
+      if ($entity->hasField($field_name) && !$entity->get($field_name)->isEmpty()) {
+        $values = $entity->get($field_name)->getValue();
+        $site_ids = array_column($values, 'target_id');
+        if (count(array_intersect($site_ids, $user_sites)) > 0) {
+          return TRUE;
+        }
+      }
+    }
+    return FALSE;
+  }
+
+  /**
+   * Returns site field names.
+   *
+   * @return array
+   *   Array.
+   */
+  public function getSiteFieldsName() {
+    return ['field_node_site', 'field_node_primary_site', 'field_media_site'];
+  }
+
+  /**
+   * Build user's site trail.
+   *
+   * @param \Drupal\user\UserInterface $user
+   *   The user.
+   *
+   * @return array
+   *   Sites array or empty array.
+   */
+  public function getUserSitesTrail(UserInterface $user) {
+    $user_sites = $this->getUserSites($user);
+    $result = [];
+    foreach ($user_sites as $site) {
+      $trail = $this->getSiteTrail($site);
+      $parent_id = reset($trail);
+      $result[$parent_id] = $parent_id;
+      $result[$site] = $site;
+    }
+    return $result;
   }
 
 }
