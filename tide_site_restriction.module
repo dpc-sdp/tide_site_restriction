@@ -16,6 +16,8 @@ use Drupal\user\UserInterface;
 use Drupal\views\Plugin\views\cache\CachePluginBase;
 use Drupal\views\ViewExecutable;
 use Drupal\Core\Entity\EntityInterface;
+use Drupal\node\Entity\Node;
+use Drupal\tide_site_restriction\Helper;
 use Drupal\user\Entity\Role;
 
 /**
@@ -39,21 +41,15 @@ function tide_site_restriction_entity_access(EntityInterface $entity, $operation
     return AccessResult::neutral()->addCacheableDependency($entity);
   }
   if ($account->isAuthenticated() && in_array($operation, ['update', 'delete'])) {
-    /** @var \Drupal\user\Entity\User $user */
-    $user = User::load($account->id());
-    $user_sites = $site_restriction_helper->getUserSites($user);
-    $user_can_bypass_restriction = $site_restriction_helper->canBypassRestriction($account);
-    if (!$user_can_bypass_restriction) {
-      if ($site_restriction_helper->hasEntitySitesAccess($entity, $user_sites)) {
-        return AccessResult::allowed()
-          ->addCacheableDependency($entity)
-          ->addCacheTags(['site_restriction'])
-          ->cachePerUser();
-      }
-      return AccessResult::forbidden('Access denied by Site Restriction.')
-        ->addCacheableDependency($entity)
-        ->addCacheTags(['site_restriction'])
-        ->cachePerUser();
+    $access_result = _compute_access($account, $entity, $site_restriction_helper);
+    return $access_result;
+  }
+
+  $moderation_info = Drupal::service('content_moderation.moderation_information');
+  if ($moderation_info->isModeratedEntity($entity)) {
+    if ($account->isAuthenticated() && $operation == 'view' && $entity->moderation_state->value == 'draft') {
+      $access_result = _compute_access($account, $entity, $site_restriction_helper);
+      return $access_result;
     }
   }
 
@@ -161,6 +157,84 @@ function tide_site_restriction_form_views_exposed_form_alter(&$form, FormStateIn
         ];
       }
     }
+  }
+}
+
+/**
+ * Implements hook_node_access_records().
+ */
+function tide_site_restriction_node_access_records(Node $node) {
+  $grants = [];
+  if (!$node->isPublished()) {
+    $sites_values = $node->get('field_node_site')->getValue();
+    if (empty($sites_values)) {
+      return $grants;
+    }
+    $sites = array_column($sites_values, 'target_id');
+    foreach ($sites as $site) {
+      $grants[] = [
+        'realm' => 'tide_site_restriction',
+        'gid' => $site,
+        'grant_view' => 1,
+        'grant_update' => 0,
+        'grant_delete' => 0,
+        'nid' => $node->id(),
+      ];
+    }
+  }
+  return $grants;
+}
+
+/**
+ * Implements hook_node_grants().
+ */
+function tide_site_restriction_node_grants(AccountInterface $account, $op) {
+  $user = User::load($account->id());
+  $user_sites = $user->get('field_user_site')->getValue();
+  if (empty($user_sites)) {
+    return [];
+  }
+  $sites = array_column($user_sites, 'target_id');
+  $grants = [];
+  if ($op == 'view') {
+    foreach ($sites as $site) {
+      $grants['tide_site_restriction'][] = $site;
+    }
+    return $grants;
+  }
+}
+
+/**
+ * Implements hook_node_grants_alter().
+ */
+function tide_site_restriction_node_grants_alter(&$grants, AccountInterface $account, $op) {
+  foreach ($grants as $realm => $gid) {
+    // Other modules should respect to the tide_site_restriction module.
+    if ($realm != 'tide_site_restriction') {
+      unset($grants[$realm]);
+    }
+  }
+  return $grants;
+}
+
+/**
+ * Computes access result based on the sites assigned.
+ */
+function _compute_access(AccountInterface $account, EntityInterface $entity, Helper $helper) {
+  $user = User::load($account->id());
+  $user_sites = $helper->getUserSites($user);
+  $user_can_bypass_restriction = $helper->canBypassRestriction($account);
+  if (!$user_can_bypass_restriction) {
+    if ($helper->hasEntitySitesAccess($entity, $user_sites)) {
+      return AccessResult::allowed()
+        ->addCacheableDependency($entity)
+        ->addCacheTags(['site_restriction'])
+        ->cachePerUser();
+    }
+    return AccessResult::forbidden('Access denied by Site Restriction.')
+      ->addCacheableDependency($entity)
+      ->addCacheTags(['site_restriction'])
+      ->cachePerUser();
   }
 }
 
