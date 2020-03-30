@@ -242,7 +242,7 @@ function _compute_access(AccountInterface $account, EntityInterface $entity, Hel
  * Implements hook_form_FORM_ID_alter().
  */
 function tide_site_restriction_form_user_form_alter(&$form, FormStateInterface $form_state, $form_id) {
-  if (isset($form['field_user_site'])) {
+  if (isset($form['field_user_site']) && $form['field_user_site']['#access']) {
     $roles = Role::loadMultiple();
     $states = [];
     foreach ($roles as $role_id => $role) {

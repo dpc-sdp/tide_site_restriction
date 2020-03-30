@@ -37,7 +37,6 @@ class Helper extends TideSiteHelper {
   public function __construct(EntityTypeManagerInterface $entity_type_manager, EntityRepositoryInterface $entity_repository, AccountProxyInterface $current_user) {
     parent::__construct($entity_type_manager, $entity_repository);
     $this->currentUser = $current_user;
-    $this->supportedEntityTypes[] = 'user';
   }
 
   /**
