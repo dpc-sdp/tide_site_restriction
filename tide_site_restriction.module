@@ -41,6 +41,10 @@ function tide_site_restriction_entity_access(EntityInterface $entity, $operation
     return AccessResult::neutral()->addCacheableDependency($entity);
   }
   if ($account->isAuthenticated() && in_array($operation, ['update', 'delete'])) {
+    // Restricting editors from deleting contents SDPA-3781.
+    if (in_array('editor', $account->getRoles()) && $operation == 'delete') {
+      return AccessResult::forbidden();
+    }
     $access_result = _compute_access($account, $entity, $site_restriction_helper);
     return $access_result;
   }
@@ -131,6 +135,14 @@ function tide_site_restriction_views_pre_view(ViewExecutable $view, $display_id,
           }
         }
       }
+    }
+  }
+  // Excluding "Delete Content" option for editors SDPA-3781.
+  if ($view->id() == 'summary_contents_filters' && in_array('editor', $account->getRoles())) {
+    $fields = $view->display_handler->getOption('fields');
+    if (!empty($fields['node_bulk_form'])) {
+      $fields['node_bulk_form']['selected_actions'][] = 'node_delete_action';
+      $view->display_handler->setOption('fields', $fields);
     }
   }
 }
