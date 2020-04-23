@@ -4,7 +4,7 @@ Feature: site selector widget
   Ensure that site selector widget meets the expected requirements.
 
   @api @suggest
-  Scenario: site selector widget's limitation for editors.
+  Scenario: site selector widget's limitation for editors and approvers.
     Given sites terms:
       | name                 | parent          | tid   | uuid                                  |
       | Test Site 1          | 0               | 10010 | 11dede11-10c0-111e1-1100-000000000031 |
@@ -18,8 +18,9 @@ Feature: site selector widget
       | Test topic 1 | 0      | 10017 |
 
     And users:
-      | name        | status | uid    | mail                    | pass         | field_user_site | roles  |
-      | test.editor |      1 | 999999 | test.editor@example.com | L9dx9IJz3'M* | Test Section 11 | Editor |
+      | name          | status | uid    | mail                      | pass         | field_user_site | roles    |
+      | test.editor   | 1      | 999999 | test.editor@example.com   | L9dx9IJz3'M* | Test Section 11 | Editor   |
+      | test.approver | 1      | 888888 | test.approver@example.com | L9dx9IJz3'M* | Test Section 11 | Approver |
 
     And test content:
       | title       | path       | moderation_state | uuid                                | field_node_site              | field_node_primary_site | nid     | field_topic  |
@@ -35,6 +36,16 @@ Feature: site selector widget
     And I fill in "Summary" with "Cras Tristique Risus"
     And I fill in "Topic" with "Test topic 1 (10017)"
     And I select "Needs Review" from "Save as"
+
+    When I am logged in as "test.editor"
+    Then I edit test "[TEST] LP 1"
+    Then I should not see an "#edit-delete" element
+    Then save screenshot
+
+    When I am logged in as "test.approver"
+    Then I edit test "[TEST] LP 1"
+    Then I should see an "#edit-delete" element
+    Then save screenshot
 
     When I am an anonymous user
     Then I send a GET request to "api/v1/node/test?site=10010"
