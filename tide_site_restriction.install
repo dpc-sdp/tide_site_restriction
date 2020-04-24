@@ -50,3 +50,19 @@ function tide_site_restriction_install() {
     $role->save();
   }
 }
+
+/**
+ * Grant permission for node delete operation.
+ */
+function tide_site_restriction_update_8001() {
+  $role = Role::load('site_admin');
+  if ($role) {
+    $role->grantPermission('bypass node delete restriction');
+    $role->save();
+  }
+  $role = Role::load('approver');
+  if ($role) {
+    $role->grantPermission('bypass node delete restriction');
+    $role->save();
+  }
+}

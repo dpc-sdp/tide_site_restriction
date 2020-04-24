@@ -42,7 +42,7 @@ function tide_site_restriction_entity_access(EntityInterface $entity, $operation
   }
   if ($account->isAuthenticated() && in_array($operation, ['update', 'delete'])) {
     // Restricting editors from deleting contents SDPA-3781.
-    if (in_array('editor', $account->getRoles()) && $operation == 'delete') {
+    if (!$account->hasPermission('bypass node delete restriction') && $operation == 'delete') {
       return AccessResult::forbidden();
     }
     $access_result = _compute_access($account, $entity, $site_restriction_helper);
@@ -106,13 +106,13 @@ function tide_site_restriction_views_pre_view(ViewExecutable $view, $display_id,
   // Pre-select user sites in Summary Content admin view.
   $view_ids = ['summary_contents_filters', 'media'];
   $display_ids = ['page_1' => 'field_node_site_target_id', 'media_page_list' => 'field_media_site_target_id'];
+  $account = \Drupal::currentUser();
   foreach ($view_ids as $view_id) {
     if ($view->id() == $view_id) {
       foreach ($display_ids as $id => $filter) {
         if ($display_id == $id) {
           /** @var \Drupal\tide_site_restriction\Helper $site_restriction_helper */
           $site_restriction_helper = \Drupal::service('tide_site_restriction.helper');
-          $account = \Drupal::currentUser();
           $user_can_bypass_restriction = $site_restriction_helper->canBypassRestriction($account);;
 
           $filters = $view->display_handler->getOption('filters');
@@ -138,7 +138,7 @@ function tide_site_restriction_views_pre_view(ViewExecutable $view, $display_id,
     }
   }
   // Excluding "Delete Content" option for editors SDPA-3781.
-  if ($view->id() == 'summary_contents_filters' && in_array('editor', $account->getRoles())) {
+  if ($view->id() == 'summary_contents_filters' && !$account->hasPermission('bypass node delete restriction')) {
     $fields = $view->display_handler->getOption('fields');
     if (!empty($fields['node_bulk_form'])) {
       $fields['node_bulk_form']['selected_actions'][] = 'node_delete_action';

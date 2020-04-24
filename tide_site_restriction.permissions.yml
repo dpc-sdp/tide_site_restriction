@@ -6,3 +6,7 @@ bypass site restriction:
   title: 'Bypass site restriction'
   description: 'Bypass user restriction by Sites.'
   restrict access: TRUE
+bypass node delete restriction:
+  title: 'bypass node delete restriction'
+  description: 'Bypass node delete restriction by Sites.'
+  restrict access: TRUE
