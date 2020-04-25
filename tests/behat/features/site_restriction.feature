@@ -41,7 +41,7 @@ Feature: site selector widget
     Then I should not see an "#edit-delete" element
     Then save screenshot
 
-    When I am logged in as a user with the "bypass node delete restriction" permission
+    When I am logged in as a user with the "bypass node delete restriction, bypass node access" permission
     Then I edit test "[TEST] LP 1"
     Then I should see an "#edit-delete" element
     Then save screenshot
