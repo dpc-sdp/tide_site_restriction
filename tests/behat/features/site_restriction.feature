@@ -36,16 +36,6 @@ Feature: site selector widget
     And I fill in "Topic" with "Test topic 1 (10017)"
     And I select "Needs Review" from "Save as"
 
-    When I am logged in as "test.editor"
-    Then I edit test "[TEST] LP 1"
-    Then I should not see an "#edit-delete" element
-    Then save screenshot
-
-    When I am logged in as a user with the "bypass node delete restriction, bypass node access" permission
-    Then I edit test "[TEST] LP 1"
-    Then I should see an "#edit-delete" element
-    Then save screenshot
-
     When I am an anonymous user
     Then I send a GET request to "api/v1/node/test?site=10010"
     Then I should get a 200 HTTP response
