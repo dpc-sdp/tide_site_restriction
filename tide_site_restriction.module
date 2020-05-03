@@ -41,14 +41,14 @@ function tide_site_restriction_entity_access(EntityInterface $entity, $operation
     return AccessResult::neutral()->addCacheableDependency($entity);
   }
   if ($account->isAuthenticated() && in_array($operation, ['update', 'delete'])) {
-    $access_result = _compute_access($account, $entity, $site_restriction_helper);
+    $access_result = tide_site_compute_access($account, $entity, $site_restriction_helper);
     return $access_result;
   }
 
   $moderation_info = Drupal::service('content_moderation.moderation_information');
   if ($moderation_info->isModeratedEntity($entity)) {
     if ($account->isAuthenticated() && $operation == 'view' && $entity->moderation_state->value == 'draft') {
-      $access_result = _compute_access($account, $entity, $site_restriction_helper);
+      $access_result = tide_site_compute_access($account, $entity, $site_restriction_helper);
       return $access_result;
     }
   }
@@ -102,13 +102,13 @@ function tide_site_restriction_views_pre_view(ViewExecutable $view, $display_id,
   // Pre-select user sites in Summary Content admin view.
   $view_ids = ['summary_contents_filters', 'media'];
   $display_ids = ['page_1' => 'field_node_site_target_id', 'media_page_list' => 'field_media_site_target_id'];
+  $account = \Drupal::currentUser();
   foreach ($view_ids as $view_id) {
     if ($view->id() == $view_id) {
       foreach ($display_ids as $id => $filter) {
         if ($display_id == $id) {
           /** @var \Drupal\tide_site_restriction\Helper $site_restriction_helper */
           $site_restriction_helper = \Drupal::service('tide_site_restriction.helper');
-          $account = \Drupal::currentUser();
           $user_can_bypass_restriction = $site_restriction_helper->canBypassRestriction($account);;
 
           $filters = $view->display_handler->getOption('filters');
@@ -220,13 +220,13 @@ function tide_site_restriction_node_grants_alter(&$grants, AccountInterface $acc
 /**
  * Computes access result based on the sites assigned.
  */
-function _compute_access(AccountInterface $account, EntityInterface $entity, Helper $helper) {
+function tide_site_compute_access(AccountInterface $account, EntityInterface $entity, Helper $helper) {
   $user = User::load($account->id());
   $user_sites = $helper->getUserSites($user);
   $user_can_bypass_restriction = $helper->canBypassRestriction($account);
   if (!$user_can_bypass_restriction) {
     if ($helper->hasEntitySitesAccess($entity, $user_sites)) {
-      return AccessResult::allowed()
+      return AccessResult::neutral()
         ->addCacheableDependency($entity)
         ->addCacheTags(['site_restriction'])
         ->cachePerUser();

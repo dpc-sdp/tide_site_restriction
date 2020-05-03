@@ -18,8 +18,8 @@ Feature: site selector widget
       | Test topic 1 | 0      | 10017 |
 
     And users:
-      | name        | status | uid    | mail                    | pass         | field_user_site | roles  |
-      | test.editor |      1 | 999999 | test.editor@example.com | L9dx9IJz3'M* | Test Section 11 | Editor |
+      | name          | status | uid    | mail                      | pass         | field_user_site | roles    |
+      | test.editor   | 1      | 999999 | test.editor@example.com   | L9dx9IJz3'M* | Test Section 11 | Editor   |
 
     And test content:
       | title       | path       | moderation_state | uuid                                | field_node_site              | field_node_primary_site | nid     | field_topic  |
