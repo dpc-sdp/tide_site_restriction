@@ -62,7 +62,7 @@ function tide_site_restriction_entity_access(EntityInterface $entity, $operation
 function tide_site_restriction_views_post_render(ViewExecutable $view, &$output, CachePluginBase $cache) {
   /** @var \Drupal\tide_site_restriction\Helper $site_restriction_helper */
   $site_restriction_helper = \Drupal::service('tide_site_restriction.helper');
-  if (in_array($view->getBaseEntityType()->id(), $site_restriction_helper->getSupportedEntityTypes())) {
+  if ($view->getBaseEntityType() && in_array($view->getBaseEntityType()->id(), $site_restriction_helper->getSupportedEntityTypes())) {
     $output['#cache']['tags'][] = 'site_restriction';
     if (\Drupal::currentUser()->isAuthenticated()) {
       $output['#cache']['tags'][] = 'user:' . \Drupal::currentUser()->id();
@@ -76,7 +76,7 @@ function tide_site_restriction_views_post_render(ViewExecutable $view, &$output,
 function tide_site_restriction_views_pre_render(ViewExecutable $view) {
   /** @var \Drupal\tide_site_restriction\Helper $site_restriction_helper */
   $site_restriction_helper = \Drupal::service('tide_site_restriction.helper');
-  if (in_array($view->getBaseEntityType()->id(), $site_restriction_helper->getSupportedEntityTypes())) {
+  if ($view->getBaseEntityType() && in_array($view->getBaseEntityType()->id(), $site_restriction_helper->getSupportedEntityTypes())) {
     foreach ($view->result as $row) {
       if ($row->_entity) {
         $row->_entity->addCacheTags(['site_restriction']);
