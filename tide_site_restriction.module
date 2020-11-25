@@ -41,10 +41,10 @@ function tide_site_restriction_entity_access(EntityInterface $entity, $operation
     return AccessResult::neutral()->addCacheableDependency($entity);
   }
   if ($account->isAuthenticated() && in_array($operation, [
-      'update',
-      'delete',
-      'clone',
-    ])) {
+    'update',
+    'delete',
+    'clone',
+  ])) {
     $access_result = tide_site_compute_access($account, $entity, $site_restriction_helper);
     return $access_result;
   }

@@ -4,7 +4,7 @@
     "type": "drupal-module",
     "license": "GPL-2.0-or-later",
     "require": {
-        "dpc-sdp/tide_core": "^1.6.0",
+        "dpc-sdp/tide_core": "dev-feature/SDPA-4755--content-cloning as 1.6.14",
         "dpc-sdp/tide_site": "^1.4.0",
         "dpc-sdp/tide_publication": "^1.0.0",
         "drupal/select2": "1.7",
