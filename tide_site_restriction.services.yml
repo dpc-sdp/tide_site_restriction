@@ -8,3 +8,8 @@ services:
     class: Drupal\tide_site_restriction\EventSubscriber\TideSiteRestrictionRouterAlter
     tags:
       - { name: event_subscriber }
+  tide_site_restriction.entity_clone_event_subscriber:
+    class: Drupal\tide_site_restriction\EventSubscriber\TideSiteRestrictionEntityClone
+    arguments: [ '@current_user','@tide_site_restriction.helper','@entity_type.manager', ]
+    tags:
+      - { name: event_subscriber }
