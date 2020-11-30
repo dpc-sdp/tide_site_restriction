@@ -19,6 +19,7 @@ use Drupal\Core\Entity\EntityInterface;
 use Drupal\node\Entity\Node;
 use Drupal\tide_site_restriction\Helper;
 use Drupal\user\Entity\Role;
+use Drupal\node\Entity\NodeType;
 
 /**
  * Implements hook_entity_field_access().
@@ -347,6 +348,21 @@ function tide_site_restriction_entity_operation_alter(array &$operations, Entity
     if (!$user_can_bypass_restriction) {
       if (!$site_restriction_helper->hasEntitySitesAccess($entity, $user_sites)) {
         unset($operations['quick_clone']);
+      }
+    }
+  }
+}
+
+/**
+ * Implements hook_form_alter().
+ */
+function tide_site_restriction_form_alter(&$form, FormStateInterface $form_state, $form_id) {
+  $node_types = NodeType::loadMultiple();
+  foreach ($node_types as $node_type => $obj) {
+    if ($form_id == 'node_' . $node_type . '_quick_node_clone_form') {
+      if (isset($form['field_node_site']) && isset($form['field_node_primary_site'])) {
+        $form['field_node_site']['widget']['#default_value'] = [];
+        $form['field_node_primary_site']['widget']['#default_value'] = NULL;
       }
     }
   }
