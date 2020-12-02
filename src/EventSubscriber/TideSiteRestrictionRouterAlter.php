@@ -23,6 +23,9 @@ class TideSiteRestrictionRouterAlter extends RouteSubscriberBase {
     if ($route = $collection->get('entity.node.entity_hierarchy_reorder')) {
       $route->setRequirement('_custom_access', '\Drupal\tide_site_restriction\EventSubscriber\TideSiteRestrictionRouterAlter::childPageAccess');
     }
+    if ($route = $collection->get('quick_node_clone.node.quick_clone')) {
+      $route->setRequirement('_custom_access', '\Drupal\tide_site_restriction\EventSubscriber\TideSiteRestrictionRouterAlter::childPageAccess');
+    }
   }
 
   /**
