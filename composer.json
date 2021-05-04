@@ -6,7 +6,7 @@
     "require": {
         "dpc-sdp/tide_core": "^2.0.0",
         "dpc-sdp/tide_site": "^2.0.1",
-        "dpc-sdp/tide_publication": "dev-feature/SDPA-5093-remove-old-card-options as ^1.0.0",
+        "dpc-sdp/tide_publication": "dev-feature/SDPA-5093-remove-old-card-options as 1.0.0",
         "drupal/select2": "1.7",
         "oomphinc/composer-installers-extender": "^1.1",
         "select2/select2": "^4.0",
