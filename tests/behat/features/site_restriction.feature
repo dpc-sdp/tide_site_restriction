@@ -1,4 +1,4 @@
-@jsonapi
+@jsonapi @test-me @install:tide_api
 Feature: site selector widget
 
   Ensure that site selector widget meets the expected requirements.
