@@ -50,3 +50,14 @@ function tide_site_restriction_install() {
     $role->save();
   }
 }
+
+/**
+ * Changes user.field_user_site field to `required` field.
+ */
+function tide_site_restriction_update_8001() {
+  $field = \Drupal::entityTypeManager()
+    ->getStorage('field_config')
+    ->load('user.user.field_user_site');
+  $field->setRequired(TRUE);
+  $field->save();
+}

@@ -18,7 +18,6 @@ use Drupal\views\ViewExecutable;
 use Drupal\Core\Entity\EntityInterface;
 use Drupal\node\Entity\Node;
 use Drupal\tide_site_restriction\Helper;
-use Drupal\user\Entity\Role;
 use Drupal\node\Entity\NodeType;
 
 /**
@@ -28,7 +27,6 @@ function tide_site_restriction_entity_field_access($operation, FieldDefinitionIn
   if ($field_definition->getName() == 'field_user_site' && $operation == 'edit') {
     return $account->hasPermission('administer site restriction') ? AccessResult::allowed() : AccessResult::forbidden();
   }
-
   return AccessResult::neutral();
 }
 
@@ -250,78 +248,6 @@ function tide_site_compute_access(AccountInterface $account, EntityInterface $en
 }
 
 /**
- * Implements hook_form_FORM_ID_alter().
- */
-function tide_site_restriction_form_user_form_alter(&$form, FormStateInterface $form_state, $form_id) {
-  if (isset($form['field_user_site']) && $form['field_user_site']['#access']) {
-    $roles = Role::loadMultiple();
-    $states = [];
-    foreach ($roles as $role_id => $role) {
-      if ($role->hasPermission('bypass node access') || $role->hasPermission('administer nodes') || $role->hasPermission('bypass site restriction')) {
-        $states[] = [
-          [':input[name="roles[' . $role_id . ']"]' => ['checked' => TRUE]],
-          'or',
-          // We have drupal/role_delegation dependency, so need to check
-          // role_change name.
-          [':input[name="role_change[' . $role_id . ']"]' => ['checked' => TRUE]],
-          'or',
-        ];
-      }
-    }
-    $results = [];
-    if ($states) {
-      foreach ($states as $state) {
-        $results = array_merge($results, $state);
-      }
-      // Removes the last 'or'.
-      if (end($results) == 'or') {
-        array_pop($results);
-      }
-      $form['field_user_site']['widget']['#states'] = [
-        'invisible' => $results,
-      ];
-    }
-    $form['#validate'][] = '_tide_site_restriction_validation';
-  }
-}
-
-/**
- * Custom validation.
- */
-function _tide_site_restriction_validation(&$form, FormStateInterface $form_state) {
-  if (!isset($form['role_change']['#access']) || !$form['role_change']['#access']) {
-    $values = $form_state->getValue('roles');
-  }
-  else {
-    $values = array_column($form_state->getValue('role_change'), 'target_id');
-  }
-  if ($values) {
-    $roles = Role::loadMultiple($values);
-    if (empty($form_state->getValue('field_user_site'))) {
-      $result = FALSE;
-      foreach ($roles as $role) {
-        if ($role->hasPermission('bypass node access') || $role->hasPermission('administer nodes') || $role->hasPermission('bypass site restriction')) {
-          $result = TRUE;
-        }
-      }
-      if (!$result) {
-        $form_state->setErrorByName('field_user_site', t('Site Restriction field is required.'));
-      }
-    }
-  }
-}
-
-/**
- * Implements hook_preprocess_HOOK().
- */
-function tide_site_restriction_preprocess_fieldset(&$variables) {
-  if (isset($variables['element']['#field_name']) && $variables['element']['#field_name'] == 'field_user_site') {
-    // Adds '*' to field_user_site.
-    $variables['legend']['attributes']->addClass('form-required');
-  }
-}
-
-/**
  * After the user reset the password, redirect them to the home page.
  */
 function tide_site_restriction_form_user_pass_reset_alter(&$form, FormStateInterface $form_state, $form_id) {
@@ -365,5 +291,16 @@ function tide_site_restriction_form_alter(&$form, FormStateInterface $form_state
         $form['field_node_primary_site']['widget']['#default_value'] = NULL;
       }
     }
+  }
+}
+
+/**
+ * Implements hook_user_login().
+ */
+function tide_site_restriction_user_login(UserInterface $account) {
+  $site_restriction_helper = \Drupal::service('tide_site_restriction.helper');
+  if (!$site_restriction_helper->getUserSites($account)) {
+    \Drupal::messenger()
+      ->addMessage(t('You need to be assigned a site to access the preview content. please contact to your site administrator.'));
   }
 }
