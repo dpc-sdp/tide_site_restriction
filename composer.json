@@ -4,8 +4,8 @@
     "type": "drupal-module",
     "license": "GPL-2.0-or-later",
     "require": {
-        "dpc-sdp/tide_core": "^2.0.0",
-        "dpc-sdp/tide_site": "^2.0.1",
+        "dpc-sdp/tide_core": "^2.0.14",
+        "dpc-sdp/tide_site": "dev-feature/DDIDO-594--update-drush as 2.0.4",
         "dpc-sdp/tide_publication": "^1.0.0",
         "drupal/select2": "1.7",
         "oomphinc/composer-installers-extender": "^2.0",
