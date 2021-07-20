@@ -86,7 +86,7 @@ class SubSitesFilter extends ManyToOne {
   }
 
   /**
-   * generates the options.
+   * Generates the options.
    *
    * @return array
    *   An array of tid and its label.
@@ -108,7 +108,7 @@ class SubSitesFilter extends ManyToOne {
   }
 
   /**
-   * builds the query.
+   * Builds the query.
    */
   public function query() {
     if (!empty($this->value)) {
