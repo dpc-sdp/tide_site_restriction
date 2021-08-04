@@ -102,7 +102,7 @@ function tide_site_restriction_user_presave(UserInterface $user) {
 function tide_site_restriction_views_pre_view(ViewExecutable $view, $display_id, array &$args) {
   // Pre-select user sites in Summary Content admin view.
   $view_ids = ['summary_contents_filters', 'media'];
-  $display_ids = ['page_1' => 'field_node_site_target_id', 'media_page_list' => 'field_media_site_target_id'];
+  $display_ids = ['page_1' => 'sub_sites_filter', 'media_page_list' => 'field_media_site_target_id'];
   $account = \Drupal::currentUser();
   foreach ($view_ids as $view_id) {
     if ($view->id() == $view_id) {
@@ -143,7 +143,7 @@ function tide_site_restriction_form_views_exposed_form_alter(&$form, FormStateIn
   // Enable Select2 to Site filter of Content Admin view.
   $form_ids = [
     'views-exposed-form-media-media-page-list' => 'field_media_site_target_id',
-    'views-exposed-form-summary-contents-filters-page-1' => 'field_node_site_target_id',
+    'views-exposed-form-summary-contents-filters-page-1' => 'sub_sites_filter',
   ];
   foreach ($form_ids as $form_id => $filter) {
     if (!empty($form['#id']) && $form['#id'] == $form_id) {
@@ -366,4 +366,19 @@ function tide_site_restriction_form_alter(&$form, FormStateInterface $form_state
       }
     }
   }
+}
+
+/**
+ * Implements hook_views_data_alter().
+ */
+function tide_site_restriction_views_data_alter(array &$data) {
+  $data['node_field_data']['sub_sites_filter'] = [
+    'title' => t('Sub-sites'),
+    'filter' => [
+      'title' => t('Sub sites filter'),
+      'help' => t('Provides a custom filter for admin/content view.'),
+      'field' => 'nid',
+      'id' => 'sub_sites_filter',
+    ],
+  ];
 }
