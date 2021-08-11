@@ -16,9 +16,7 @@ aliases:
       - run: if [ -f "./dev-tools.sh" ] && [ ! "$DEV_TOOLS" ]; then ./dev-tools.sh; fi
       - setup_remote_docker:
           docker_layer_caching: true
-      - run:
-          command: .circleci/build.sh
-          no_output_timeout: 30m
+      - run: .circleci/build.sh
       - run: .circleci/test.sh
       - run:
           name: Copy artifacts
