@@ -8,6 +8,20 @@
 use Drupal\user\Entity\Role;
 
 /**
+ * Set tide_site_restriction on content forms.
+ */
+function _tide_site_restriction_install_widgets() {
+  $bundles = \Drupal::entityTypeManager()->getStorage('node_type')->loadMultiple();
+  foreach ($bundles as $bundle) {
+    $config_name = 'core.entity_form_display.node.' . $bundle->id() . '.default';
+    $config = \Drupal::configFactory()->getEditable($config_name);
+    $config->set('content.field_node_primary_site.type', 'tide_site_restriction_field_widget');
+    $config->set('content.field_node_site.type', 'tide_site_restriction_field_widget');
+    $config->save();
+  }
+}
+
+/**
  * Implements hook_install().
  */
 function tide_site_restriction_install() {
@@ -49,6 +63,8 @@ function tide_site_restriction_install() {
     $role->grantPermission('bypass site restriction');
     $role->save();
   }
+
+  _tide_site_restriction_install_widgets();
 }
 
 /**
