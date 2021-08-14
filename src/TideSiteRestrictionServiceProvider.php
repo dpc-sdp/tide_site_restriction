@@ -26,7 +26,7 @@ class TideSiteRestrictionServiceProvider extends ServiceProviderBase implements 
 
     $definition = $container->getDefinition('access_check.node.revision');
     $definition->setClass('Drupal\tide_site_restriction\Access\RevisionAccessCheck')
-      ->setArguments([new Reference('entity.manager'), new Reference('tide_site_restriction.helper')]);
+      ->setArguments([new Reference('entity_type.manager'), new Reference('tide_site_restriction.helper')]);
   }
 
 }
