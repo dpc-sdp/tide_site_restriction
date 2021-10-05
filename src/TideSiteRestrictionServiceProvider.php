@@ -8,7 +8,7 @@ use Drupal\Core\DependencyInjection\ServiceProviderInterface;
 use Symfony\Component\DependencyInjection\Reference;
 
 /**
- * Class TideSiteRestrictionServiceProvider.
+ * Class tide_site_restriction service provider.
  *
  * Altering Drupal Core behavior.
  *

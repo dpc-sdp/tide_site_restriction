@@ -102,7 +102,10 @@ function tide_site_restriction_user_presave(UserInterface $user) {
 function tide_site_restriction_views_pre_view(ViewExecutable $view, $display_id, array &$args) {
   // Pre-select user sites in Summary Content admin view.
   $view_ids = ['summary_contents_filters', 'media'];
-  $display_ids = ['page_1' => 'sub_sites_filter', 'media_page_list' => 'field_media_site_target_id'];
+  $display_ids = [
+    'page_1' => 'sub_sites_filter',
+    'media_page_list' => 'field_media_site_target_id'
+  ];
   $account = \Drupal::currentUser();
   foreach ($view_ids as $view_id) {
     if ($view->id() == $view_id) {
@@ -110,7 +113,7 @@ function tide_site_restriction_views_pre_view(ViewExecutable $view, $display_id,
         if ($display_id == $id) {
           /** @var \Drupal\tide_site_restriction\Helper $site_restriction_helper */
           $site_restriction_helper = \Drupal::service('tide_site_restriction.helper');
-          $user_can_bypass_restriction = $site_restriction_helper->canBypassRestriction($account);;
+          $user_can_bypass_restriction = $site_restriction_helper->canBypassRestriction($account);
 
           $filters = $view->display_handler->getOption('filters');
           if (!empty($filters[$filter])) {
