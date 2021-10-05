@@ -104,7 +104,7 @@ function tide_site_restriction_views_pre_view(ViewExecutable $view, $display_id,
   $view_ids = ['summary_contents_filters', 'media'];
   $display_ids = [
     'page_1' => 'sub_sites_filter',
-    'media_page_list' => 'field_media_site_target_id'
+    'media_page_list' => 'field_media_site_target_id',
   ];
   $account = \Drupal::currentUser();
   foreach ($view_ids as $view_id) {
