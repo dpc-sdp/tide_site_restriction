@@ -118,9 +118,10 @@ Feature: site selector widget
 
     When I am an anonymous user
     Then I send a GET request to "api/v1/node/test?site=10010"
-    Then I should get a 200 HTTP response
+    And save screenshot
+    Then the response code should be 200
     When I send a GET request to "api/v1/node/test/99999999-aaaa-bbbb-ccc-000000000001?site=10010"
-    Then I should get a 200 HTTP response
+    Then the response code should be 200
     And save screenshot
     And the response should be in JSON
     And the JSON node "links.self" should exist
