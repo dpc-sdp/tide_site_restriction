@@ -11,7 +11,7 @@ use Drupal\tide_site\TideSiteHelper;
 use Drupal\user\UserInterface;
 
 /**
- * Class Helper.
+ * Class Helper for tide_site_restriction.
  *
  * @package Drupal\tide_site_restriction
  */

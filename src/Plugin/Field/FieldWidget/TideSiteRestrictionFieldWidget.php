@@ -8,6 +8,7 @@ use Drupal\Core\Entity\FieldableEntityInterface;
 use Drupal\Core\Field\FieldDefinitionInterface;
 use Drupal\Core\Field\FieldItemListInterface;
 use Drupal\Core\Field\Plugin\Field\FieldWidget\OptionsButtonsWidget;
+use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
 use Drupal\Core\Session\AccountProxyInterface;
@@ -30,6 +31,13 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
  * )
  */
 class TideSiteRestrictionFieldWidget extends OptionsButtonsWidget implements ContainerFactoryPluginInterface {
+
+  /**
+   * The entity type manager.
+   *
+   * @var \Drupal\Core\Entity\EntityTypeManagerInterface
+   */
+  protected $entityTypeManager;
 
   /**
    * Current User.
@@ -55,8 +63,9 @@ class TideSiteRestrictionFieldWidget extends OptionsButtonsWidget implements Con
   /**
    * {@inheritdoc}
    */
-  public function __construct($plugin_id, $plugin_definition, FieldDefinitionInterface $field_definition, array $settings, array $third_party_settings, AccountProxyInterface $currentUser, Helper $helper, ModerationInformation $moderation_information) {
+  public function __construct($plugin_id, $plugin_definition, FieldDefinitionInterface $field_definition, array $settings, array $third_party_settings, EntityTypeManagerInterface $entityTypeManager, AccountProxyInterface $currentUser, Helper $helper, ModerationInformation $moderation_information) {
     parent::__construct($plugin_id, $plugin_definition, $field_definition, $settings, $third_party_settings);
+    $this->entityTypeManager = $entityTypeManager;
     $this->currentUser = $currentUser;
     $this->helper = $helper;
     $this->moderationInformation = $moderation_information;
@@ -72,6 +81,7 @@ class TideSiteRestrictionFieldWidget extends OptionsButtonsWidget implements Con
       $configuration['field_definition'],
       $configuration['settings'],
       $configuration['third_party_settings'],
+      $container->get('entity_type.manager'),
       $container->get('current_user'),
       $container->get('tide_site_restriction.helper'),
       $container->get('content_moderation.moderation_information')
@@ -153,7 +163,13 @@ class TideSiteRestrictionFieldWidget extends OptionsButtonsWidget implements Con
       // Calculates the results if the user could not bypass the restrictions
       // and the FormObject was entity form.
       if (!$entity->isNew() && $this->multiple) {
-        $last_revision = $this->moderationInformation->getLatestRevision($entity->getEntityTypeId(), $entity->id());
+        /** @var \Drupal\Core\Entity\EntityStorageInterface|\Drupal\Core\Entity\RevisionableStorageInterface $entityStorage */
+        $entityStorage = $this->entityTypeManager->getStorage($entity->getEntityTypeId());
+        $latestRevisionId = $entityStorage->getLatestRevisionId($entity->id());
+        if ($latestRevisionId) {
+          /** @var \Drupal\Core\Entity\EntityInterface|\Drupal\Core\Entity\RevisionableInterface $latest */
+          $last_revision = $entityStorage->loadRevision($latestRevisionId);
+        }
         $revision_value = $last_revision->get($this->fieldDefinition->getName())->getValue();
         $user_sites = $this->helper->getUserSites(User::load($this->currentUser->id()));
         $diff = array_diff(array_column($revision_value, 'target_id'), $user_sites);
