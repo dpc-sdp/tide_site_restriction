@@ -8,7 +8,7 @@ use Drupal\Core\DependencyInjection\ServiceProviderInterface;
 use Symfony\Component\DependencyInjection\Reference;
 
 /**
- * Class TideSiteRestrictionServiceProvider.
+ * Class tide_site_restriction service provider.
  *
  * Altering Drupal Core behavior.
  *
@@ -26,7 +26,10 @@ class TideSiteRestrictionServiceProvider extends ServiceProviderBase implements 
 
     $definition = $container->getDefinition('access_check.node.revision');
     $definition->setClass('Drupal\tide_site_restriction\Access\RevisionAccessCheck')
-      ->setArguments([new Reference('entity.manager'), new Reference('tide_site_restriction.helper')]);
+      ->setArguments([
+        new Reference('entity_type.manager'),
+        new Reference('tide_site_restriction.helper'),
+      ]);
   }
 
 }

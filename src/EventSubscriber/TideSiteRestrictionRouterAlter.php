@@ -10,7 +10,7 @@ use Drupal\user\Entity\User;
 use Symfony\Component\Routing\RouteCollection;
 
 /**
- * Class TideSiteRestrictionRouterAlter.
+ * Class tide_site_restriction router alter.
  *
  * @package Drupal\tide_site_restriction\EventSubscriber
  */

@@ -61,10 +61,10 @@ Feature: site selector widget
     And the JSON node "data[0].attributes.title" should be equal to "[TEST] LP 1"
     And the JSON node "data[0].attributes.moderation_state" should be equal to "published"
     And the JSON node "data[0].attributes.drupal_internal__nid" should be equal to "999999"
-    And the JSON node "data[0].attributes.metatag_normalized" should exist
-    And the JSON node "data[0].attributes.metatag_normalized[1].attributes.name" should be equal to "title"
-    And the JSON node "data[0].attributes.metatag_normalized[1].attributes.content" should be equal to "[TEST] LP 1 | Single Digital Presence Content Management System"
-    And the JSON node "data[0].attributes.metatag_normalized[0].attributes.href" should contain "/test-lp-1"
+    And the JSON node "data[0].attributes.metatag" should exist
+    And the JSON node "data[0].attributes.metatag[1].attributes.name" should be equal to "title"
+    And the JSON node "data[0].attributes.metatag[1].attributes.content" should be equal to "[TEST] LP 1 | Single Digital Presence Content Management System"
+    And the JSON node "data[0].attributes.metatag[0].attributes.href" should contain "/test-lp-1"
     And the JSON node "data[0].attributes.path" should exist
     And the JSON node "data[0].attributes.path.alias" should be equal to "/test-lp-1"
     And the JSON node "data[0].attributes.path.url" should be equal to "/test-lp-1"
@@ -118,9 +118,10 @@ Feature: site selector widget
 
     When I am an anonymous user
     Then I send a GET request to "api/v1/node/test?site=10010"
-    Then I should get a 200 HTTP response
+    And save screenshot
+    Then the response code should be 200
     When I send a GET request to "api/v1/node/test/99999999-aaaa-bbbb-ccc-000000000001?site=10010"
-    Then I should get a 200 HTTP response
+    Then the response code should be 200
     And save screenshot
     And the response should be in JSON
     And the JSON node "links.self" should exist
@@ -141,10 +142,10 @@ Feature: site selector widget
     And the JSON node "data[0].attributes.title" should be equal to "[TEST] LP 2"
     And the JSON node "data[0].attributes.moderation_state" should be equal to "published"
     And the JSON node "data[0].attributes.drupal_internal__nid" should be equal to "999998"
-    And the JSON node "data[0].attributes.metatag_normalized" should exist
-    And the JSON node "data[0].attributes.metatag_normalized[1].attributes.name" should be equal to "title"
-    And the JSON node "data[0].attributes.metatag_normalized[1].attributes.content" should be equal to "[TEST] LP 2 | Single Digital Presence Content Management System"
-    And the JSON node "data[0].attributes.metatag_normalized[0].attributes.href" should contain "/test-lp-2"
+    And the JSON node "data[0].attributes.metatag" should exist
+    And the JSON node "data[0].attributes.metatag[1].attributes.name" should be equal to "title"
+    And the JSON node "data[0].attributes.metatag[1].attributes.content" should be equal to "[TEST] LP 2 | Single Digital Presence Content Management System"
+    And the JSON node "data[0].attributes.metatag[0].attributes.href" should contain "/test-lp-2"
     And the JSON node "data[0].attributes.path" should exist
     And the JSON node "data[0].attributes.path.alias" should be equal to "/test-lp-2"
     And the JSON node "data[0].attributes.path.url" should be equal to "/test-lp-2"
