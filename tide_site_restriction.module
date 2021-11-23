@@ -304,7 +304,7 @@ function tide_site_restriction_user_login(UserInterface $account) {
   $site_restriction_helper = \Drupal::service('tide_site_restriction.helper');
   if (!$site_restriction_helper->getUserSites($account)) {
     \Drupal::messenger()
-      ->addMessage(t('You need to be assigned a site to access the preview content. Please contact to your site administrator.'));
+      ->addMessage(t('You need to be assigned a site to access the preview content. Please contact your site administrator.'));
   }
 }
 
