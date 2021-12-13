@@ -209,29 +209,6 @@ function tide_site_restriction_node_grants(AccountInterface $account, $op) {
 }
 
 /**
- * Implements hook_node_grants_alter().
- */
-function tide_site_restriction_node_grants_alter(&$grants, AccountInterface $account, $op) {
-  /** @var \Drupal\tide_site_restriction\Helper $site_restriction_helper */
-  $site_restriction_helper = \Drupal::service('tide_site_restriction.helper');
-  // If the user could bypass the restriction, we provide an opportunity for
-  // other modules to alter the grants.
-  if ($site_restriction_helper->canBypassRestriction($account) === TRUE) {
-    return $grants;
-  }
-
-  // If the user could not bypass the restriction, it should respect the
-  // tide_site_restriction rules only.
-  foreach ($grants as $realm => $gid) {
-    // Other modules should respect to the tide_site_restriction module.
-    if ($realm != 'tide_site_restriction') {
-      unset($grants[$realm]);
-    }
-  }
-  return $grants;
-}
-
-/**
  * Computes access result based on the sites assigned.
  */
 function tide_site_compute_access(AccountInterface $account, EntityInterface $entity, Helper $helper) {
