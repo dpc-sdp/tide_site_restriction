@@ -6,7 +6,6 @@ core_version_requirement: ^8.9 || ^9
 dependencies:
   - dpc-sdp:tide_core
   - dpc-sdp:tide_site
-  - dpc-sdp:tide_publication
   - drupal:select2
   - drupal:form_options_attributes
 config_devel:
