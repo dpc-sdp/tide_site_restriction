@@ -342,7 +342,6 @@ function tide_site_restriction_form_alter(&$form, FormStateInterface $form_state
     if ($form_id == 'node_' . $node_type . '_quick_node_clone_form') {
       if (isset($form['field_node_site']) && isset($form['field_node_primary_site'])) {
         $form['field_node_site']['widget']['#default_value'] = [];
-        $form['field_node_primary_site']['widget']['#default_value'] = NULL;
       }
     }
   }
