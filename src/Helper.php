@@ -99,12 +99,12 @@ class Helper extends TideSiteHelper {
    *   True or FALSE
    */
   public function hasEntitySitesAccess(EntityInterface $entity, array $user_sites) {
-    // Get the current user roles.
-    $user_roles = ($this->currentUser->id()) ? User::load($this->currentUser->id())->getRoles() : '';
     if (empty($user_sites)) {
+      // Get the current user roles.
+      $user_roles = ($this->currentUser->id()) ? User::load($this->currentUser->id())->getRoles() : '';
       if (!empty($user_roles)) {
         // Administrator role can bypass the restriction.
-        return (in_array('administrator', $user_roles)) ? TRUE : FALSE;
+        return (in_array('administrator', $user_roles));
       }
       return FALSE;
     }
