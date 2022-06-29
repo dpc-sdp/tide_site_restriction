@@ -8,6 +8,7 @@ use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Session\AccountInterface;
 use Drupal\Core\Session\AccountProxyInterface;
 use Drupal\tide_site\TideSiteHelper;
+use Drupal\user\Entity\User;
 use Drupal\user\UserInterface;
 
 /**
