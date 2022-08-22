@@ -8,6 +8,7 @@ use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Session\AccountInterface;
 use Drupal\Core\Session\AccountProxyInterface;
 use Drupal\tide_site\TideSiteHelper;
+use Drupal\user\Entity\User;
 use Drupal\user\UserInterface;
 
 /**
@@ -100,6 +101,12 @@ class Helper extends TideSiteHelper {
    */
   public function hasEntitySitesAccess(EntityInterface $entity, array $user_sites) {
     if (empty($user_sites)) {
+      // Get the current user roles.
+      $user_roles = ($this->currentUser->id()) ? User::load($this->currentUser->id())->getRoles() : '';
+      if (!empty($user_roles)) {
+        // Administrator role can bypass the restriction.
+        return (in_array('administrator', $user_roles));
+      }
       return FALSE;
     }
     $field_names = $this->getSiteFieldsName();
