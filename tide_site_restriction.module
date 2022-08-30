@@ -146,6 +146,7 @@ function tide_site_restriction_form_views_exposed_form_alter(&$form, FormStateIn
   $form_ids = [
     'views-exposed-form-media-media-page-list' => 'field_media_site_target_id',
     'views-exposed-form-summary-contents-filters-page-1' => 'sub_sites_filter',
+    'views-exposed-form-user-admin-people-page-1' => 'field_user_site_target_id_1',
   ];
   foreach ($form_ids as $form_id => $filter) {
     if (!empty($form['#id']) && $form['#id'] == $form_id) {
