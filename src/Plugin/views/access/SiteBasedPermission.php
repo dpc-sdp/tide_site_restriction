@@ -76,6 +76,7 @@ class SiteBasedPermission extends Permission {
   public function buildOptionsForm(&$form, FormStateInterface $form_state) {
     parent::buildOptionsForm($form, $form_state);
     $tree = \Drupal::entityTypeManager()->getStorage('taxonomy_term')->loadTree('sites', 0, 1);
+    $options = [];
     foreach ($tree as $item) {
       $options[$item->tid] = $item->name;
     }
