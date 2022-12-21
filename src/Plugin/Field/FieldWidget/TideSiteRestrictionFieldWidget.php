@@ -191,7 +191,7 @@ class TideSiteRestrictionFieldWidget extends OptionsButtonsWidget implements Con
       }
       $options[] = ['target_id' => $parentSiteId];
     }
-    return array_map('unserialize', array_unique(array_map('serialize', array_merge($results, $options))));
+    return array_unique(array_merge($results, $options), SORT_REGULAR);
   }
 
   /**
