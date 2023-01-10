@@ -305,13 +305,13 @@ function tide_site_restriction_preprocess_fieldset(&$variables) {
  * After the user reset the password, redirect them to the home page.
  */
 function tide_site_restriction_form_user_pass_reset_alter(&$form, FormStateInterface $form_state, $form_id) {
-  $form['#submit'][] = '_user_login_page';
+  $form['#submit'][] = 'tide_site_restriction_user_login_page';
 }
 
 /**
  * The submit handler for redirecting the user_pass_reset page.
  */
-function _user_login_page($form, $form_state) {
+function tide_site_restriction_user_login_page($form, $form_state) {
   $form_state->setRedirect('<front>');
 }
 
