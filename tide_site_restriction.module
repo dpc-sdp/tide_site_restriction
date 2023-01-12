@@ -41,14 +41,14 @@ function tide_site_restriction_entity_access(EntityInterface $entity, $operation
     return AccessResult::neutral()->addCacheableDependency($entity);
   }
   if ($account->isAuthenticated() && in_array($operation, ['update', 'delete'])) {
-    $access_result = tide_site_compute_access($account, $entity, $site_restriction_helper);
+    $access_result = tide_site_restriction_compute_access($account, $entity, $site_restriction_helper);
     return $access_result;
   }
 
   $moderation_info = Drupal::service('content_moderation.moderation_information');
   if ($moderation_info->isModeratedEntity($entity)) {
     if ($account->isAuthenticated() && $operation == 'view' && $entity->moderation_state->value == 'draft') {
-      $access_result = tide_site_compute_access($account, $entity, $site_restriction_helper);
+      $access_result = tide_site_restriction_compute_access($account, $entity, $site_restriction_helper);
       return $access_result;
     }
   }
@@ -211,7 +211,7 @@ function tide_site_restriction_node_grants(AccountInterface $account, $op) {
 /**
  * Computes access result based on the sites assigned.
  */
-function tide_site_compute_access(AccountInterface $account, EntityInterface $entity, Helper $helper) {
+function tide_site_restriction_compute_access(AccountInterface $account, EntityInterface $entity, Helper $helper) {
   $user = User::load($account->id());
   $user_sites = $helper->getUserSites($user);
   $user_can_bypass_restriction = $helper->canBypassRestriction($account);
@@ -305,13 +305,13 @@ function tide_site_restriction_preprocess_fieldset(&$variables) {
  * After the user reset the password, redirect them to the home page.
  */
 function tide_site_restriction_form_user_pass_reset_alter(&$form, FormStateInterface $form_state, $form_id) {
-  $form['#submit'][] = '_user_login_page';
+  $form['#submit'][] = 'tide_site_restriction_user_login_page';
 }
 
 /**
  * The submit handler for redirecting the user_pass_reset page.
  */
-function _user_login_page($form, $form_state) {
+function tide_site_restriction_user_login_page($form, $form_state) {
   $form_state->setRedirect('<front>');
 }
 
