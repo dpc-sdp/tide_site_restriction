@@ -53,7 +53,7 @@ class SiteAccessRouteCheck implements AccessInterface {
         ->cachePerUser();
     }
     // Computes the result.
-    $result = tide_site_compute_access($account, $node, $this->helper);
+    $result = tide_site_restriction_compute_access($account, $node, $this->helper);
     if (!$result) {
       throw new AccessDeniedHttpException();
     }
