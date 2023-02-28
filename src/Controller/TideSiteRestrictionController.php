@@ -20,12 +20,14 @@ class TideSiteRestrictionController extends ControllerBase {
    *   Render array.
    */
   public function sitesAllocationTab(UserInterface $user) {
+    $helper = \Drupal::service('tide_site_restriction.helper');
+    if ($helper->canBypassRestriction(\Drupal::currentUser())) {
+      return ['#markup' => t('You could access all sites')];
+    }
     if ($user->field_user_site->isEmpty()) {
       return ['#markup' => t('No sites assigned.')];
     }
-    $build = $user->field_user_site->view();
-    $build['#title'] = t('Site permissions');
-    return $build;
+    return $user->field_user_site->view();
   }
 
 }
