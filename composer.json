@@ -4,8 +4,8 @@
     "type": "drupal-module",
     "license": "GPL-2.0-or-later",
     "require": {
-        "dpc-sdp/tide_core": "^3.0.0",
-        "dpc-sdp/tide_site": "^3.0.0",
+        "dpc-sdp/tide_core": "dev-reference",
+        "dpc-sdp/tide_site": "dev-reference",
         "drupal/select2": "^1.7",
         "oomphinc/composer-installers-extender": "^2.0",
         "select2/select2": "^4.0",
