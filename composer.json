@@ -13,7 +13,7 @@
     },
     "suggest": {
         "dpc-sdp/tide_api:^3.0.0": "Allows to use Drupal in headless mode",
-        "dpc-sdp/tide_publication:dev-feature/update-composer as ^3.0.0": "Allows to use publication content type"
+        "dpc-sdp/tide_publication:^3.0.0": "Allows to use publication content type"
     },
     "repositories": {
         "drupal": {
@@ -31,9 +31,6 @@
                 "type:npm-asset"
             ]
         },
-        "installer-types": [
-            "bower-asset",
-            "npm-asset"
-        ]
+        "installer-types": ["bower-asset", "npm-asset"]
     }
 }
