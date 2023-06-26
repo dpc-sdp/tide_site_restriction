@@ -13,7 +13,7 @@
     },
     "suggest": {
         "dpc-sdp/tide_api:^3.0.0": "Allows to use Drupal in headless mode",
-        "dpc-sdp/tide_publication:^3.0.0": "Allows to use publication content type"
+        "dpc-sdp/tide_publication:3.0.4": "Allows to use publication content type"
     },
     "repositories": {
         "drupal": {
