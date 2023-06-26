@@ -6,10 +6,12 @@ core_version_requirement: ^8.9 || ^9
 dependencies:
   - dpc-sdp:tide_core
   - dpc-sdp:tide_site
+  - dpc-sdp:tide_publication
   - drupal:select2
   - drupal:form_options_attributes
 config_devel:
   install:
     - field.field.user.user.field_user_site
     - field.storage.user.field_user_site
+    - node.type.publication
   optional: { }
