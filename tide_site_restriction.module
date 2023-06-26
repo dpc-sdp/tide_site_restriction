@@ -7,18 +7,18 @@
 
 use Drupal\Core\Access\AccessResult;
 use Drupal\Core\Cache\Cache;
+use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Field\FieldDefinitionInterface;
 use Drupal\Core\Field\FieldItemListInterface;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Session\AccountInterface;
+use Drupal\node\Entity\Node;
+use Drupal\tide_site_restriction\Helper;
+use Drupal\user\Entity\Role;
 use Drupal\user\Entity\User;
 use Drupal\user\UserInterface;
 use Drupal\views\Plugin\views\cache\CachePluginBase;
 use Drupal\views\ViewExecutable;
-use Drupal\Core\Entity\EntityInterface;
-use Drupal\node\Entity\Node;
-use Drupal\tide_site_restriction\Helper;
-use Drupal\user\Entity\Role;
 
 /**
  * Implements hook_entity_field_access().
@@ -347,3 +347,22 @@ function tide_site_restriction_views_data_alter(array &$data) {
     ],
   ];
 }
+
+/**
+ * Implements hook_views_pre_view().
+ */
+function tide_site_restriction_user_views_pre_view(ViewExecutable $view, $display_id, array &$args)
+{
+  if ($view->id() === 'user_list_data_export') {
+    $site_field = [
+      'label' => t('Site restriction'),
+      'group_rows' => TRUE,
+      'multi_type' => 'ul',
+      'plugin_id' => 'field',
+      'alter' => [],
+    ];
+    $view->addHandler($display_id, 'field', 'user__field_user_site', 'field_user_site', $site_field, '0');
+
+  }
+}
+
