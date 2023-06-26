@@ -12,4 +12,6 @@ config_devel:
   install:
     - field.field.user.user.field_user_site
     - field.storage.user.field_user_site
+    - node.type.publication_page
+    - node.type.publication
   optional: { }
