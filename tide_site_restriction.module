@@ -136,7 +136,7 @@ function tide_site_restriction_views_pre_view(ViewExecutable $view, $display_id,
       }
     }
   }
-  // add site restriction field to user list view.
+  // Add site restriction field to user list view.
   if ($view->id() === 'user_list_data_export') {
     $site_field = [
       'label' => t('Site restriction'),
