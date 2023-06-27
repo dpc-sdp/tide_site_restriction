@@ -136,6 +136,17 @@ function tide_site_restriction_views_pre_view(ViewExecutable $view, $display_id,
       }
     }
   }
+  // add site restriction field to user list view.
+  if ($view->id() === 'user_list_data_export') {
+    $site_field = [
+      'label' => t('Site restriction'),
+      'group_rows' => TRUE,
+      'multi_type' => 'ul',
+      'plugin_id' => 'field',
+      'alter' => [],
+    ];
+    $view->addHandler($display_id, 'field', 'user__field_user_site', 'field_user_site', $site_field, '0');
+  }
 }
 
 /**
@@ -346,21 +357,4 @@ function tide_site_restriction_views_data_alter(array &$data) {
       'id' => 'sub_sites_filter',
     ],
   ];
-}
-
-/**
- * Implements hook_views_pre_view().
- */
-function tide_site_restriction_user_views_pre_view(ViewExecutable $view, $display_id, array &$args) {
-  if ($view->id() === 'user_list_data_export') {
-    $site_field = [
-      'label' => t('Site restriction'),
-      'group_rows' => TRUE,
-      'multi_type' => 'ul',
-      'plugin_id' => 'field',
-      'alter' => [],
-    ];
-    $view->addHandler($display_id, 'field', 'user__field_user_site', 'field_user_site', $site_field, '0');
-
-  }
 }
