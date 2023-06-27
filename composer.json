@@ -13,7 +13,7 @@
     },
     "suggest": {
         "dpc-sdp/tide_api:^3.0.0": "Allows to use Drupal in headless mode",
-        "dpc-sdp/tide_publication:dev-feature/update-composer"
+        "dpc-sdp/tide_publication": "dev-feature/update-composer"
     },
     "repositories": {
         "drupal": {
