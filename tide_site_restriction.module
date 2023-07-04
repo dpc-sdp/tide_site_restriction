@@ -86,6 +86,28 @@ function tide_site_restriction_views_pre_render(ViewExecutable $view) {
       }
     }
   }
+  // Rearrange view's columns.
+  if ($view->id() === 'user_list_data_export') {
+    $fields_order = [
+      'name_1',
+      'field_name',
+      'field_last_name',
+      'field_department_agency',
+      'mail',
+      'status',
+      'role',
+      'field_user_site',
+      'created',
+      //'created_by'
+      'access',
+      'field_business_name',
+      'field_business_contact_number',
+      'field_notes',
+      'expiration',
+    ];
+
+    $view->field = array_merge(array_flip($fields_order), $view->field);
+  }
 }
 
 /**
