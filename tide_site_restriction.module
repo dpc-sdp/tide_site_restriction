@@ -95,7 +95,7 @@ function tide_site_restriction_views_pre_render(ViewExecutable $view) {
       'field_department_agency',
       'mail',
       'status',
-      'role',
+      'roles_target_id',
       'field_user_site',
       'created',
       'access',
