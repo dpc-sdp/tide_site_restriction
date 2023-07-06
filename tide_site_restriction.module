@@ -99,6 +99,7 @@ function tide_site_restriction_views_pre_render(ViewExecutable $view) {
       'field_user_site',
       'created',
       'access',
+      'field_user_created_by_field',
       'field_business_name',
       'field_business_contact_number',
       'field_notes',
