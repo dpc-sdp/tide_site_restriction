@@ -35,16 +35,5 @@
             "bower-asset",
             "npm-asset"
         ]
-    },
-    "config": {
-        "allow-plugins": {
-            "composer/installers": true,
-            "dealerdirect/phpcodesniffer-composer-installer": true,
-            "php-http/discovery": true,
-            "drupal/console-extend-plugin": true,
-            "oomphinc/composer-installers-extender": true,
-            "cweagans/composer-patches": true,
-            "drupal/core-composer-scaffold": true
-        }
     }
 }
