@@ -13,7 +13,7 @@
     },
     "suggest": {
         "dpc-sdp/tide_api:^3.0.0": "Allows to use Drupal in headless mode",
-        "dpc-sdp/tide_publication:dev-develop": "Allows to use publication content type"
+        "dpc-sdp/tide_publication:^3.0.0": "Allows to use publication content type"
     },
     "repositories": {
         "drupal": {
@@ -31,9 +31,15 @@
                 "type:npm-asset"
             ]
         },
-        "installer-types": [
-            "bower-asset",
-            "npm-asset"
-        ]
+        "installer-types": ["bower-asset", "npm-asset"]
+    },
+    "config": {
+        "allow-plugins": {
+            "composer/installers": true,
+            "dealerdirect/phpcodesniffer-composer-installer": true,
+            "php-http/discovery": true,
+            "drupal/console-extend-plugin": true,
+            "oomphinc/composer-installers-extender": true
+        }
     }
 }
