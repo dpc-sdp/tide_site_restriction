@@ -2,6 +2,8 @@
 
 namespace Drupal\tide_site_restriction;
 
+use Drupal\user\Entity\Role;
+
 /**
  * Tide site restriction modules operations.
  */

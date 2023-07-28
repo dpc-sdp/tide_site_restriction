@@ -5,7 +5,6 @@
  * Install file.
  */
 
-use Drupal\user\Entity\Role;
 use Drupal\tide_site_restriction\TideSiteRestrictionOperation;
 
 /**
