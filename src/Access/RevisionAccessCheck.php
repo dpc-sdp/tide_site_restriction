@@ -3,7 +3,7 @@
 namespace Drupal\tide_site_restriction\Access;
 
 use Drupal\Core\Entity\EntityTypeManagerInterface;
-use Drupal\node\Access\NodeRevisionAccessCheck;
+use Drupal\Core\Entity\EntityAccessCheck;
 use Drupal\Core\Session\AccountInterface;
 use Drupal\node\NodeInterface;
 use Drupal\tide_site_restriction\Helper;
@@ -14,7 +14,7 @@ use Drupal\user\Entity\User;
  *
  * @ingroup node_access
  */
-class RevisionAccessCheck extends NodeRevisionAccessCheck {
+class RevisionAccessCheck extends EntityAccessCheck {
 
   /**
    * Tide site restriction helper.
