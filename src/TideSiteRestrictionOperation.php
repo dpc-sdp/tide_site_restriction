@@ -10,7 +10,7 @@ class TideSiteRestrictionOperation {
   /**
    * Adds sub_sites_filter filter.
    */
-  public function addSubSitesFilter() {
+  public static function addSubSitesFilter() {
     $value = [
       'id' => 'sub_sites_filter',
       'table' => 'node_field_data',
@@ -77,6 +77,64 @@ class TideSiteRestrictionOperation {
       $display['default']['display_options']['filters'] = $new_filters;
       $view_config->set('display', $display);
       $view_config->save();
+    }
+  }
+
+  /**
+   * Set tide_site_restriction on content forms.
+   */
+  public static function installWidgets() {
+    $bundles = \Drupal::entityTypeManager()->getStorage('node_type')->loadMultiple();
+    foreach ($bundles as $bundle) {
+      $config_name = 'core.entity_form_display.node.' . $bundle->id() . '.default';
+      $config = \Drupal::configFactory()->getEditable($config_name);
+      $config->set('content.field_node_primary_site.type', 'tide_site_restriction_field_widget');
+      $config->set('content.field_node_site.type', 'tide_site_restriction_field_widget');
+      $config->save();
+    }
+  }
+
+  /**
+   * Add necessary settings.
+   */
+  public static function addNecessarySettings() {
+    /** @var \Drupal\Core\Entity\Display\EntityFormDisplayInterface $entity_form_display */
+    $entity_form_display = \Drupal::entityTypeManager()
+      ->getStorage('entity_form_display')
+      ->load('user.user.default');
+    if ($entity_form_display) {
+      $entity_form_display->setComponent('field_user_site', [
+        'weight' => 31,
+        'settings' => [],
+        'third_party_settings' => [],
+        'type' => 'options_buttons',
+        'region' => 'content',
+      ])->save();
+    }
+
+    $bundleInfo = \Drupal::service('entity_type.bundle.info');
+    $entity_form_display_strorage = \Drupal::entityTypeManager()->getStorage('entity_form_display');
+    $fields = [
+      'field_node_primary_site' => 'node',
+      'field_node_site' => 'node',
+      'field_media_site' => 'media',
+    ];
+    foreach ($fields as $field_name => $type) {
+      foreach ($bundleInfo->getBundleInfo($type) as $bundle => $item) {
+        $entity_form_display = $entity_form_display_strorage->load($type . '.' . $bundle . '.default');
+        foreach ($fields as $field) {
+          $options = $entity_form_display->getComponent($field);
+          $options['type'] = 'tide_site_restriction_field_widget';
+          $entity_form_display->setComponent($field, $options)->save();
+        }
+      }
+    }
+    // Grants new permissions to Site Admins.
+    $role = Role::load('site_admin');
+    if ($role) {
+      $role->grantPermission('administer site restriction');
+      $role->grantPermission('bypass site restriction');
+      $role->save();
     }
   }
 

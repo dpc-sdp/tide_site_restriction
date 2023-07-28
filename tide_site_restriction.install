@@ -9,71 +9,12 @@ use Drupal\user\Entity\Role;
 use Drupal\tide_site_restriction\TideSiteRestrictionOperation;
 
 /**
- * Set tide_site_restriction on content forms.
- */
-function _tide_site_restriction_install_widgets() {
-  $bundles = \Drupal::entityTypeManager()->getStorage('node_type')->loadMultiple();
-  foreach ($bundles as $bundle) {
-    $config_name = 'core.entity_form_display.node.' . $bundle->id() . '.default';
-    $config = \Drupal::configFactory()->getEditable($config_name);
-    $config->set('content.field_node_primary_site.type', 'tide_site_restriction_field_widget');
-    $config->set('content.field_node_site.type', 'tide_site_restriction_field_widget');
-    $config->save();
-  }
-}
-
-/**
  * Implements hook_install().
  */
 function tide_site_restriction_install() {
-  /** @var \Drupal\Core\Entity\Display\EntityFormDisplayInterface $entity_form_display */
-  $entity_form_display = \Drupal::entityTypeManager()
-    ->getStorage('entity_form_display')
-    ->load('user.user.default');
-  if ($entity_form_display) {
-    $entity_form_display->setComponent('field_user_site', [
-      'weight' => 31,
-      'settings' => [],
-      'third_party_settings' => [],
-      'type' => 'options_buttons',
-      'region' => 'content',
-    ])->save();
-  }
 
-  $bundleInfo = \Drupal::service('entity_type.bundle.info');
-  $entity_form_display_strorage = \Drupal::entityTypeManager()->getStorage('entity_form_display');
-  $fields = [
-    'field_node_primary_site' => 'node',
-    'field_node_site' => 'node',
-    'field_media_site' => 'media',
-  ];
-  foreach ($fields as $field_name => $type) {
-    foreach ($bundleInfo->getBundleInfo($type) as $bundle => $item) {
-      $entity_form_display = $entity_form_display_strorage->load($type . '.' . $bundle . '.default');
-      foreach ($fields as $field) {
-        $options = $entity_form_display->getComponent($field);
-        $options['type'] = 'tide_site_restriction_field_widget';
-        $entity_form_display->setComponent($field, $options)->save();
-      }
-    }
-  }
-  // Grants new permissions to Site Admins.
-  $role = Role::load('site_admin');
-  if ($role) {
-    $role->grantPermission('administer site restriction');
-    $role->grantPermission('bypass site restriction');
-    $role->save();
-  }
+  TideSiteRestrictionOperation::addSubSitesFilter();
+  TideSiteRestrictionOperation::installWidgets();
+  TideSiteRestrictionOperation::addNecessarySettings();
 
-  _tide_site_restriction_install_widgets();
-  $tideSiteRestrictionOperation = new TideSiteRestrictionOperation();
-  $tideSiteRestrictionOperation->addSubSitesFilter();
-}
-
-/**
- * Adds sub_sites_filter filter.
- */
-function tide_site_restriction_update_8001() {
-  $tideSiteRestrictionOperation = new TideSiteRestrictionOperation();
-  $tideSiteRestrictionOperation->addSubSitesFilter();
 }
