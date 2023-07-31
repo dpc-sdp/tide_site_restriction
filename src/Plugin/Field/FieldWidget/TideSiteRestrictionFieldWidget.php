@@ -2,6 +2,7 @@
 
 namespace Drupal\tide_site_restriction\Plugin\Field\FieldWidget;
 
+use Drupal\content_moderation\ModerationInformation;
 use Drupal\Core\Entity\EntityFormInterface;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Entity\FieldableEntityInterface;
@@ -11,7 +12,6 @@ use Drupal\Core\Field\Plugin\Field\FieldWidget\OptionsButtonsWidget;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
 use Drupal\Core\Session\AccountProxyInterface;
-use Drupal\content_moderation\ModerationInformation;
 use Drupal\tide_site\TideSiteFields;
 use Drupal\tide_site_restriction\Helper;
 use Drupal\user\Entity\User;
