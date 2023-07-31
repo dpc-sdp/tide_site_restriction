@@ -23,13 +23,6 @@ class TideSiteRestrictionServiceProvider extends ServiceProviderBase implements 
     $definition = $container->getDefinition('content_moderation.state_transition_validation');
     $definition->setClass('Drupal\tide_site_restriction\Access\ModerationStateAccess')
       ->addArgument(new Reference('tide_site_restriction.helper'));
-
-    $definition = $container->getDefinition('access_check.entity');
-    $definition->setClass('Drupal\tide_site_restriction\Access\RevisionAccessCheck')
-      ->setArguments([
-        new Reference('entity_type.manager'),
-        new Reference('tide_site_restriction.helper'),
-      ]);
   }
 
 }
