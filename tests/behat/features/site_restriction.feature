@@ -62,9 +62,9 @@ Feature: site selector widget
     And the JSON node "data[0].attributes.moderation_state" should be equal to "published"
     And the JSON node "data[0].attributes.drupal_internal__nid" should be equal to "999999"
     And the JSON node "data[0].attributes.metatag" should exist
-    And the JSON node "data[0].attributes.metatag[1].attributes.name" should be equal to "title"
-    And the JSON node "data[0].attributes.metatag[1].attributes.content" should be equal to "[TEST] LP 1 | Single Digital Presence Content Management System"
-    And the JSON node "data[0].attributes.metatag[0].attributes.href" should contain "/test-lp-1"
+    And the JSON node "data[0].attributes.metatag[0].attributes.name" should be equal to "title"
+    And the JSON node "data[0].attributes.metatag[0].attributes.content" should be equal to "[TEST] LP 1 | Single Digital Presence Content Management System"
+    And the JSON node "data[0].attributes.metatag[1].attributes.href" should contain "/test-lp-1"
     And the JSON node "data[0].attributes.path" should exist
     And the JSON node "data[0].attributes.path.alias" should be equal to "/test-lp-1"
     And the JSON node "data[0].attributes.path.url" should be equal to "/test-lp-1"
@@ -143,9 +143,9 @@ Feature: site selector widget
     And the JSON node "data[0].attributes.moderation_state" should be equal to "published"
     And the JSON node "data[0].attributes.drupal_internal__nid" should be equal to "999998"
     And the JSON node "data[0].attributes.metatag" should exist
-    And the JSON node "data[0].attributes.metatag[1].attributes.name" should be equal to "title"
-    And the JSON node "data[0].attributes.metatag[1].attributes.content" should be equal to "[TEST] LP 2 | Single Digital Presence Content Management System"
-    And the JSON node "data[0].attributes.metatag[0].attributes.href" should contain "/test-lp-2"
+    And the JSON node "data[0].attributes.metatag[0].attributes.name" should be equal to "title"
+    And the JSON node "data[0].attributes.metatag[0].attributes.content" should be equal to "[TEST] LP 2 | Single Digital Presence Content Management System"
+    And the JSON node "data[0].attributes.metatag[1].attributes.href" should contain "/test-lp-2"
     And the JSON node "data[0].attributes.path" should exist
     And the JSON node "data[0].attributes.path.alias" should be equal to "/test-lp-2"
     And the JSON node "data[0].attributes.path.url" should be equal to "/test-lp-2"
