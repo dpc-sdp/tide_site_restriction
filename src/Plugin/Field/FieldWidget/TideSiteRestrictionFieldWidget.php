@@ -7,7 +7,6 @@ use Drupal\Core\Entity\EntityFormInterface;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Entity\FieldableEntityInterface;
 use Drupal\Core\Field\FieldDefinitionInterface;
-use Drupal\Core\Field\FieldItemListInterface;
 use Drupal\Core\Field\Plugin\Field\FieldWidget\OptionsButtonsWidget;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
@@ -86,28 +85,6 @@ class TideSiteRestrictionFieldWidget extends OptionsButtonsWidget implements Con
       $container->get('tide_site_restriction.helper'),
       $container->get('content_moderation.moderation_information')
     );
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function formElement(FieldItemListInterface $items, $delta, array $element, array &$form, FormStateInterface $form_state) {
-    $element = parent::formElement($items, $delta, $element, $form, $form_state);
-    $current_user = User::load($this->currentUser->id());
-    $userSites = $this->helper->getUserSites($current_user);
-    if ($userSites && !$this->helper->canBypassRestriction($current_user)) {
-      $unavailableSites = array_diff_key($element['#options'], $userSites);
-      foreach ($unavailableSites as $key => $item) {
-        $element[$key] = ['#disabled' => TRUE];
-      }
-    }
-    if ($this->multiple) {
-      $element['#default_value'] = empty($element['#default_value']) ? !$this->helper->canBypassRestriction($current_user) ? array_keys($element['#options']) : [] : $element['#default_value'];
-    }
-    else {
-      $element['#default_value'] = $element['#default_value'] ? $element['#default_value'] : key($element['#options']);
-    }
-    return $element;
   }
 
   /**
