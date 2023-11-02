@@ -46,7 +46,7 @@ Feature: site selector widget
     And the JSON node "links.self" should exist
     And the JSON node "links.self.href" should contain "api/v1/node/test"
     And the JSON node "data" should exist
-    
+
     When I send a GET request to "/api/v1/route?&site=10010&path=/site-10010/test-lp-1"
     Then the JSON node "data.attributes.bundle" should be equal to "test"
     And the JSON node "data.attributes.uuid" should be equal to "99999999-aaaa-bbbb-ccc-000000000000"

@@ -86,6 +86,35 @@ function tide_site_restriction_views_pre_render(ViewExecutable $view) {
       }
     }
   }
+  // Rearrange view's columns.
+  if ($view->id() === 'user_list_data_export') {
+    $fields_order = [
+      'name_1',
+      'field_name',
+      'field_last_name',
+      'field_department_agency',
+      'mail',
+      'status',
+      'roles_target_id',
+      'field_user_site',
+      'created',
+      'access',
+      'field_user_created_by_field',
+      'field_business_name',
+      'field_business_contact_number',
+      'field_notes',
+      'expiration',
+    ];
+
+    // Removed fields from sorting if not available.
+    foreach ($fields_order as $key => $item) {
+      if (!array_key_exists($item, $view->field)) {
+        unset($fields_order[$key]);
+      }
+    }
+
+    $view->field = array_merge(array_flip($fields_order), $view->field);
+  }
 }
 
 /**
@@ -135,6 +164,17 @@ function tide_site_restriction_views_pre_view(ViewExecutable $view, $display_id,
         }
       }
     }
+  }
+  // Add site restriction field to user list view.
+  if ($view->id() === 'user_list_data_export') {
+    $site_field = [
+      'label' => t('Site restriction'),
+      'group_rows' => TRUE,
+      'multi_type' => 'ul',
+      'plugin_id' => 'field',
+      'alter' => [],
+    ];
+    $view->addHandler($display_id, 'field', 'user__field_user_site', 'field_user_site', $site_field, '0');
   }
 }
 
