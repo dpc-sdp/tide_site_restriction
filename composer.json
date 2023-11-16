@@ -4,21 +4,21 @@
     "type": "drupal-module",
     "license": "GPL-2.0-or-later",
     "require": {
-        "dpc-sdp/tide_core": "dev-feature/SRM-870-d10-update",
-        "dpc-sdp/tide_site": "dev-feature/SRM-942-drupal-10",
+        "dpc-sdp/tide_core": "^4.0.0",
+        "dpc-sdp/tide_site": "^4.0.0",
         "drupal/select2": "^1.7",
         "oomphinc/composer-installers-extender": "^2.0",
         "select2/select2": "^4.0",
         "drupal/form_options_attributes": "^2.0"
     },
     "suggest": {
-        "dpc-sdp/tide_api:dev-feature/SRM-948-d10-update": "Allows to use Drupal in headless mode",
-        "dpc-sdp/tide_publication:dev-feature/SRM-976-drupal-10": "Allows to use publication content type"
+        "dpc-sdp/tide_api:^4.0.0": "Allows to use Drupal in headless mode",
+        "dpc-sdp/tide_publication:^4.0.0": "Allows to use publication content type"
     },
     "repositories": {
         "drupal": {
             "type": "composer",
-            "url": "https://packages.drupal.org/8"
+            "url": "https://packages.drupal.org/10"
         }
     },
     "minimum-stability": "dev",
