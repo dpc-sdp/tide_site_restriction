@@ -6,7 +6,6 @@
  */
 
 use Drupal\tide_site_restriction\TideSiteRestrictionOperation;
-use Drupal\user\Entity\Role;
 
 /**
  * Implements hook_install().
