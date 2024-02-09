@@ -68,6 +68,7 @@ class TideSiteRestrictionFieldWidget extends OptionsButtonsWidget implements Con
     $this->currentUser = $currentUser;
     $this->helper = $helper;
     $this->moderationInformation = $moderation_information;
+    $this->multiple = !empty($settings['multiple_values']);
   }
 
   /**
