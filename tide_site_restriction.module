@@ -387,3 +387,10 @@ function tide_site_restriction_views_data_alter(array &$data) {
     ],
   ];
 }
+
+/**
+ * Implements hook_views_plugins_field_alter().
+ */
+function tide_site_restriction_views_plugins_field_alter(array &$plugins) {
+  $plugins['node_bulk_form']['class'] = 'Drupal\\tide_site_restriction\\Plugin\\views\\field\\TideNodeBulkForm';
+}
