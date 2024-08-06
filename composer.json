@@ -4,7 +4,7 @@
     "type": "drupal-module",
     "license": "GPL-2.0-or-later",
     "require": {
-        "dpc-sdp/tide_core": "^4.0.0",
+        "dpc-sdp/tide_core": "dev-feature/creating-patch-to-fix-password-policy-history as 4.1.1",
         "dpc-sdp/tide_site": "^4.0.0",
         "drupal/select2": "^1.7",
         "oomphinc/composer-installers-extender": "^2.0",
